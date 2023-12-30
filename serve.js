@@ -14,7 +14,7 @@ const appOptions = {
   format: "esm",
   logLevel: "info",
   outdir: "docs",
-  entryPoints: ["src/index.ts"],
+  entryPoints: ["src/WcGantt.ts"],
 };
 
 const serveOptions = {

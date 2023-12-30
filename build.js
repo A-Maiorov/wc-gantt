@@ -16,7 +16,7 @@ const appOptions = {
   format: "esm",
   logLevel: "info",
   outdir: "dist",
-  entryPoints: ["src/index.ts"],
+  entryPoints: ["src/WcGantt.ts"],
   plugins: [minifyHTMLLiteralsPlugin(), litCssPlugin()],
 };
 await build(appOptions);

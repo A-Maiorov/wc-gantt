@@ -2,10 +2,9 @@
   "name": "wc-gantt",
   "version": "0.0.1",
   "description": "Gantt chart web component",
-  "main": "main.js",
+  "main": "dist/WcGantt.js",
   "type": "module",
-  "bin": "dist/index.js",
-  "module": "true",
+  "module": "dist/WcGantt.js",
   "files": [
     "dist",
     "src"
