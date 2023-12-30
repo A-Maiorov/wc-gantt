@@ -1,0 +1,45 @@
+{
+  "name": "wc-gantt",
+  "version": "0.0.1",
+  "description": "Gantt chart web component",
+  "main": "main.js",
+  "type": "module",
+  "bin": "dist/index.js",
+  "module": "true",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "start": "node serve.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/A-Maiorov/wc-gantt"
+  },
+  "bugs": {
+    "url": "https://github.com/A-Maiorov/wc-gantt/issues"
+  },
+  "keywords": [
+    "timeline",
+    "gantt",
+    "chart",
+    "svg",
+    "web component",
+    "lit"
+  ],
+  "author": "art",
+  "license": "MIT",
+  "peerDependencies": {
+    "lit": "3.1.0"
+  },
+  "devDependencies": {
+    "eslint": "8.56.0",
+    "esbuild": "0.19.11",
+    "esbuild-plugin-minify-html-literals": "1.0.6",
+    "esbuild-plugin-lit-css": "2.1.0",
+    "eslint-plugin-lit": "1.11.0",
+    "typescript": "5.3.3"
+  }
+}

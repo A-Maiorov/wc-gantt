@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gantt chart web component demo</title>
+  <style>
+    html {
+      font-family: -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Hiragino Sans GB,Microsoft YaHei,Helvetica Neue,Helvetica,Arial,sans-serif;
+    }    
+  </style>
+</head>
+<body>
+  <div id="ctrls">
+    <select id="viewMode" style="margin: 20px 0;height: 30px;width: 180px;">
+      <option value="day">Day</option>
+      <option value="week" selected>Week</option>
+      <option value="month">Month</option>
+    </select>
+    <input type="checkbox" id="showLinks" checked>
+    <label for="showLinks">Show Links</label>
+    <input type="checkbox" id="showDelay" checked>
+    <label for="showDelay">Show Delay</label>
+    <button type="button" id="autoSchedule">Auto Schedule</button>
+  </div>
+  
+  <wc-gantt></wc-gantt>
+
+ 
+  <script type="module" async src="./index.js"></script>
+  <script src="./data.js"></script>
+
+ 
+  <script>
+    function ready() {
+
+      const opts = {
+        viewMode: "week"      
+      };
+
+      const wcGantt = document.querySelector("wc-gantt");
+      wcGantt.data= window.data;
+      wcGantt.options = window.opts;
+
+      wcGantt.addEventListener("item-click", (i) => {
+        console.log(i);
+      });
+
+      wcGantt.addEventListener("before-link-added", (i) => {
+        console.log(i);
+      });
+
+      function changeOptions(options) {
+        wcGantt.options = { ...opts, ...options };
+      }
+
+      const viewModeEl = document.querySelector("#viewMode");
+      viewModeEl.onchange = (e) => {
+        const viewMode = e.target.value;
+        changeOptions({ viewMode });
+      };
+
+      const showLinksEl =document.querySelector("#showLinks");
+      showLinksEl.onchange = () => {
+        const showLinks = showLinksEl.checked;
+        changeOptions({ showLinks });
+      };
+
+      const showDelayEl = document.querySelector("#showDelay");
+      showDelayEl.onchange = () => {
+        const showDelay = showDelayEl.checked;
+        changeOptions({ showDelay });
+      };
+
+
+    }
+
+    document.addEventListener("DOMContentLoaded", ready);
+  </script>
+</body>
+</html>
