@@ -1,4 +1,4 @@
-import { type WCGantt } from "./WCGantt";
+import { type WCGantt } from "./WcGantt";
 import { ComponentSettings, Link, LinkAddedEvArgs } from "./types";
 
 export function configureAddLink(

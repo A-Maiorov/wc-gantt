@@ -2,7 +2,6 @@ import { svg } from "lit";
 import { Item } from "../types";
 
 import { repeat } from "lit/directives/repeat.js";
-import { WCGantt } from "../WCGantt";
 
 export type BarOptions = {
   data: Item[];

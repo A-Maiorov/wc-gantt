@@ -7,11 +7,10 @@
   "module": "dist/WcGantt.js",
   "types": "dist/WcGantt.d.ts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build": "node build.js",
+    "build": "node build.js & tsc",
     "start": "node serve.js"
   },
   "repository": {
