@@ -5,6 +5,7 @@
   "main": "dist/WcGantt.js",
   "type": "module",
   "module": "dist/WcGantt.js",
+  "types": "dist/WcGantt.d.ts",
   "files": [
     "dist",
     "src"

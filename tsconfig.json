@@ -2,17 +2,16 @@
   "compilerOptions": {
     "strict": true,
     "strictNullChecks": false,
-    "outFile": "../dist/WcGantt.d.ts",
+    "outDir": "dist",
     "moduleResolution": "node",
     "module": "ES2022",
     "target": "ES2022",
     "experimentalDecorators": true,
     "checkJs": true,
-
     "declaration": true,
     "emitDeclarationOnly": true,
     "useDefineForClassFields": false
   },
-  "include": ["./**/*"],
+  "include": ["./src/**/*"],
   "types": ["lit"]
 }
