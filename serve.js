@@ -13,12 +13,12 @@ const appOptions = {
   platform: "browser",
   format: "esm",
   logLevel: "info",
-  outdir: "demo",
+  outdir: "docs",
   entryPoints: ["src/index.ts"],
 };
 
 const serveOptions = {
-  servedir: "demo",
+  servedir: "docs",
   host: "localhost",
 };
 let buildCtx = await context(appOptions);
