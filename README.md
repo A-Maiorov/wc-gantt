@@ -13,7 +13,7 @@ $ npm install wc-gantt --save
 
 [View demo online](https://a-maiorov.github.io/wc-gantt/)
 
-![image](demo/image.png)
+![image](docs/image.png)
 
 ## WcGantt
 
