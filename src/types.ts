@@ -9,7 +9,6 @@ export type ItemType = "activity" | "group" | "milestone";
 
 export interface Item {
   id: unknown;
-  path: string;
   type?: ItemType;
   nested?: Item[];
   text: string;

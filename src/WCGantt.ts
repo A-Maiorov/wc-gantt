@@ -16,6 +16,20 @@ import { barCss } from "./gantt/bar.css";
 import { layoutCss } from "./gantt/layout.css";
 import { configureAddLink } from "./addLink";
 
+declare global {
+  interface HTMLElementTagNameMap {
+    "wc-gantt": WCGantt;
+  }
+}
+
+/**
+ * @summary Gantt chart web component
+ * @extends {LitElement}
+ * @property {Item[]} data Reactive property, not reflected to attribute
+ * @property {WcGanttOptions} options Reactive property, not reflected to attribute
+ * @fires before-link-added CustomEvent : LinkAddedEvArgs
+ * @fires item-click CustomEvent : Item
+ */
 @customElement("wc-gantt")
 export class WCGantt extends LitElement {
   static styles = [
@@ -70,14 +84,15 @@ export class WCGantt extends LitElement {
   }
 
   private flattenData(data: Item[], path?: string) {
-    const d: Item[] = [];
+    const d: FlattenedItem[] = [];
     let ind = 0;
     for (const i of data) {
       this.validateItem(i);
-      i.path = path ? path + "." + ind : ind.toString();
-      i.id ??= i.path;
-      d.push(i);
-      if (i.nested?.length > 0) d.push(...this.flattenData(i.nested, i.path));
+      const f = i as FlattenedItem;
+      f.path = path ? path + "." + ind : ind.toString();
+      f.id ??= f.path;
+      d.push(f);
+      if (i.nested?.length > 0) d.push(...this.flattenData(i.nested, f.path));
 
       ind++;
     }
@@ -119,4 +134,9 @@ export class WCGantt extends LitElement {
     this.updateSettings();
     return html`${Gantt.bind(this)(this.#settings)}`;
   }
+}
+
+interface FlattenedItem extends Item {
+  path: string;
+  nested: undefined;
 }

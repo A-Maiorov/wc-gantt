@@ -12,7 +12,8 @@
     "declaration": true,
     "declarationDir": "dist",
     "emitDeclarationOnly": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "removeComments": false
   },
   "include": ["src"],
   "types": ["lit"]
