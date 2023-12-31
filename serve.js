@@ -1,5 +1,6 @@
-import { build, context } from "esbuild";
-
+import { context } from "esbuild";
+import { minifyHTMLLiteralsPlugin } from "esbuild-plugin-minify-html-literals";
+import { litCssPlugin } from "esbuild-plugin-lit-css";
 /**
  * @type import("esbuild").BuildOptions
  */
@@ -15,6 +16,7 @@ const appOptions = {
   logLevel: "info",
   outdir: "docs",
   entryPoints: ["src/WcGantt.ts"],
+  plugins: [minifyHTMLLiteralsPlugin(), litCssPlugin()],
 };
 
 const serveOptions = {

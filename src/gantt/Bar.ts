@@ -102,6 +102,54 @@ export function Bar(
     //  <text x=${x + w1 + 4} y=${cy} style=${styleMap(styles.text2)}>
     //    ${formatDay(v.end)}
     //  </text>
+    const backBar = svg`
+      <rect
+        x=${x}
+        y=${y}
+        width=${w1}
+        height=${barHeight}
+        rx=${1.8}
+        ry=${1.8}
+        class="back"      
+        @click=${handler}    
+      />`;
+
+    const frontBar =
+      w2 > 0.000001
+        ? svg`
+            <rect
+            x=${x}
+            y=${y}
+            width=${w2}
+            height=${barHeight}
+            rx=${1.8}
+            ry=${1.8}
+            class="front"
+            @click=${handler}
+            />`
+        : null;
+
+    const controls =
+      v.type === "group"
+        ? null
+        : svg`
+      <g>
+        <circle
+          class="gantt-ctrl-start"
+          data-id=${v.id}
+          cx=${x - 12}
+          cy=${cy}
+          r=${6}
+        />
+        <circle
+          class="gantt-ctrl-finish"
+          data-id=${v.id}
+          cx=${x + w1 + 12}
+          cy=${cy}
+          r=${6}
+        />
+      </g>
+    `;
     return {
       id,
       tpl: svg`
@@ -111,54 +159,9 @@ export function Bar(
         ?warning=${warning}
         ?danger=${danger}
       >      
-        <rect
-          x=${x}
-          y=${y}
-          width=${w1}
-          height=${barHeight}
-          rx=${1.8}
-          ry=${1.8}
-          class="back"      
-          @click=${handler}    
-        />
-        ${
-          w2 > 0.000001
-            ? svg`
-          <rect
-            x=${x}
-            y=${y}
-            width=${w2}
-            height=${barHeight}
-            rx=${1.8}
-            ry=${1.8}
-            class="front"
-            @click=${handler}
-          />
-        `
-            : null
-        }
-        ${
-          v.type === "group"
-            ? null
-            : svg`
-          <g>
-            <circle
-              class="gantt-ctrl-start"
-              data-id=${v.id}
-              cx=${x - 12}
-              cy=${cy}
-              r=${6}
-            />
-            <circle
-              class="gantt-ctrl-finish"
-              data-id=${v.id}
-              cx=${x + w1 + 12}
-              cy=${cy}
-              r=${6}
-            />
-          </g>
-        `
-        }
+        ${backBar}
+        ${frontBar}
+        ${controls}
       </g>
     `,
     };

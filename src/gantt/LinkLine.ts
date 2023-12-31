@@ -151,7 +151,8 @@ export function LinkLine(
 function drawLineWithArrow(p1: number[][], p2: number[][]) {
   return svg`
   <g>
-    <path d=${createRoundedPathString(p1)} class="link-line" />
+    <path d=${createRoundedPathString(p1)} class="link-line" ></path>
+   
     <polygon points=${p2s(p2)} class="line-arrow" />
   </g>`;
 }
