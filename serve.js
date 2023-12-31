@@ -16,7 +16,12 @@ const appOptions = {
   logLevel: "info",
   outdir: "docs",
   entryPoints: ["src/WcGantt.ts"],
-  plugins: [minifyHTMLLiteralsPlugin(), litCssPlugin()],
+  plugins: [
+    minifyHTMLLiteralsPlugin({
+      minifyOptions: { keepClosingSlash: true },
+    }),
+    litCssPlugin(),
+  ],
 };
 
 const serveOptions = {

@@ -17,6 +17,11 @@ const appOptions = {
   logLevel: "info",
   outdir: "dist",
   entryPoints: ["src/WcGantt.ts"],
-  plugins: [minifyHTMLLiteralsPlugin(), litCssPlugin()],
+  plugins: [
+    minifyHTMLLiteralsPlugin({
+      minifyOptions: { keepClosingSlash: true },
+    }),
+    litCssPlugin(),
+  ],
 };
 await build(appOptions);
