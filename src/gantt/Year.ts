@@ -1,54 +1,44 @@
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
+import { ComponentSettings } from "../types";
 
-export type YearOptions = {
-  months: number[];
-  unit: number;
-  offsetY: number;
-  minTime: number;
-  maxTime: number;
-  maxTextWidth: number;
-};
-export function Year({
-  months,
-  unit,
-  offsetY,
-  minTime,
-  maxTime,
-  maxTextWidth,
-}: YearOptions) {
-  const years = months.filter((v) => new Date(v).getMonth() === 0);
-
-  years.unshift(minTime);
-  years.push(maxTime);
-
+export function Year(years: number[], settings: ComponentSettings) {
+  years.unshift(settings.timeScale.startMs);
+  years.push(settings.timeScale.end.getTime());
   const ticks = [];
-  const x0 = maxTextWidth;
-  const y2 = offsetY / 2;
-  const len = years.length - 1;
-  for (let i = 0; i < len; i++) {
-    const cur = new Date(years[i]);
-    const x = x0 + (years[i] - minTime) / unit;
-    const t = (years[i + 1] - years[i]) / unit;
-    const id = "y_" + cur.getFullYear();
+
+  let currYear = settings.timeScale.start.getFullYear();
+  const lastYear = settings.timeScale.end.getFullYear();
+  let currX1 = 0;
+  const maxPx = settings.timeScale.dateToPx(settings.timeScale.end);
+
+  const oneFourthScaleH = settings.scaleHeight / 4;
+  const y = 0;
+  const h = oneFourthScaleH * 2;
+
+  while (currYear <= lastYear) {
+    const nextYear = new Date(currYear + 1, 0, 1, 1);
+    let currX2 = settings.timeScale.dateToPx(nextYear);
+    if (currX2 > maxPx) currX2 = maxPx;
     ticks.push({
-      id,
+      id: "y_" + currYear,
       tpl: svg`
       <g>
-        <line x1=${x} x2=${x} y1=${0} y2=${y2} 
-        class="line" />
-        ${
-          t > 35
-            ? svg`
-          <text x=${x + t / 2} y=${offsetY * 0.25} 
-          class="text small">
-            ${cur.getFullYear()}
-          </text>`
-            : null
-        }
+        <rect x=${currX2} y=${y} width="1" height=${h}
+        class="line scale flip" />      
+          <text 
+            x=${(currX2 - currX1) / 2 + currX1} 
+            y=${settings.scaleHeight * 0.25} 
+            class="text small">
+            ${currYear}
+          </text>        
       </g>`,
     });
+
+    currYear = nextYear.getFullYear();
+    currX1 = currX2;
   }
+
   return svg`<g id="year">
    ${repeat(
      ticks,

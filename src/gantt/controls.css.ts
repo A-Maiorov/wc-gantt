@@ -5,30 +5,52 @@ export const controlsCss = css`
     --gantt-active-ctl-stroke: #ffa011;
     --gantt-inactive-ctl-fill: #f0f0f0;
     --gantt-inactive-ctl-stroke: #929292;
-    --gantt-ctl-stroke-width: 1px;
+    --ctl-stroke-width: 1px;
   }
 
-  .gantt-bar:hover .gantt-ctrl-start,
-  .gantt-bar:hover .gantt-ctrl-finish {
+  .gantt-bar:hover .ctl-start,
+  .gantt-bar:hover .ctl-finish,
+  .gantt-bar:hover .ctl-resize-start,
+  .gantt-bar:hover .ctl-resize-end {
     opacity: 1;
   }
+  /* 
+  fill: var(--gantt-inactive-ctl-fill); */
 
-  .gantt-ctrl-start[active],
-  .gantt-ctrl-finish[active],
-  .gantt-ctrl-start:hover,
-  .gantt-ctrl-finish:hover {
+  .ctl-start[active],
+  .ctl-finish[active],
+  .ctl-start:hover,
+  .ctl-finish:hover {
     opacity: 1;
+    cursor: grabbed;
     fill: var(--gantt-active-ctl-fill, #ffbf5e);
-    stroke: var(--gantt-active-ctl-stroke, #ffa011);
+    stroke: var(--gantt-active-ctl-stroke, #60584c);
   }
 
-  .gantt-ctrl-start,
-  .gantt-ctrl-finish {
+  .ctl-start,
+  .ctl-finish {
+    cursor: grab;
     opacity: 0;
     position: relative;
     display: block;
     fill: var(--gantt-inactive-ctl-fill, #f0f0f0);
     stroke: var(--gantt-inactive-ctl-stroke, #929292);
-    stroke-width: var(--gantt-ctl-stroke-width, 1px);
+    stroke-width: var(--ctl-stroke-width, 1px);
+  }
+
+  .ctl-resize-start[active],
+  .ctl-resize-end[active],
+  .ctl-resize-start:hover,
+  .ctl-resize-end:hover {
+    opacity: 1;
+    fill: var(--gantt-active-ctl-fill);
+    stroke: var(--gantt-active-ctl-fill);
+  }
+  .ctl-resize-start,
+  .ctl-resize-end {
+    cursor: ew-resize;
+    opacity: 0;
+    fill: var(--gantt-inactive-ctl-fill);
+    stroke: var(--gantt-inactive-ctl-fill);
   }
 `;

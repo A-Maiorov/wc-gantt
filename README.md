@@ -83,7 +83,7 @@ interface WcGanttOptions {
 }
 
 interface ComponentSettings extends WcGanttOptions {
-  thickWidth: number; // default: 1.4 - defined by --gantt-layout-thick-line-stroke-width CSS var
+  thickWidth: number; // default: 1.4 - defined by --gantt-layout-line-width CSS var
   start: Date;
   end: Date;
   data: Item[];
@@ -116,12 +116,12 @@ type LinkAddedEvArgs = {
     --gantt-active-ctl-stroke: #ffa011;
     --gantt-inactive-ctl-fill: #f0f0f0;
     --gantt-inactive-ctl-stroke: #929292;
-    --gantt-ctl-stroke-width: 1px;
+    --ctl-stroke-width: 1px;
  
     --gantt-chart-bg-color: #fff;
     --gantt-layout-line-stroke: #eee;
-    --gantt-layout-line-stroke-width: 1px;
-    --gantt-layout-thick-line-stroke-width: 1.4px;
+    --gantt-layout-line-width: 1px;
+    --gantt-layout-line-width: 1.4px;
     --gantt-layout-text-fill: #222;
     --gantt-layout-font-size: 14px;
     --gantt-layout-small-text-fill: #999;

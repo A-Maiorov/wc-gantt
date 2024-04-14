@@ -1,86 +1,80 @@
-import { getDates } from "../utils";
+import { ComponentSettings } from "../types";
 import { YearMonth } from "./YearMonth";
 import { svg } from "lit";
-//import { Styles } from "./styles";
 import { repeat } from "lit/directives/repeat.js";
 
-export type DayHeaderOptions = {
-  //styles: Styles;
-  unit: number;
-  minTime: number;
-  maxTime: number;
-  height: number;
-  offsetY: number;
-  maxTextWidth: number;
-};
-export function DayHeader({
-  //  styles,
-  unit,
-  minTime,
-  maxTime,
-  height,
-  offsetY,
-  maxTextWidth,
-}: DayHeaderOptions) {
-  const dates = getDates(minTime, maxTime);
+export function DayHeader(settings: ComponentSettings) {
+  const scale = settings.timeScale;
+  const currentDay = new Date(scale.startMs);
   const ticks = [];
-  const x0 = maxTextWidth;
-  const y0 = offsetY / 2;
-  const RH = height - y0;
-  const len = dates.length - 1;
 
-  for (let i = 0; i < len; i++) {
-    const cur = new Date(dates[i]);
-    const day = cur.getDay();
-    const x = x0 + (dates[i] - minTime) / unit;
-    const t = (dates[i + 1] - dates[i]) / unit;
-    const id = "hd_" + day + "_" + i;
-    const currDate = cur.getDate();
-    let textX = x + t / 2;
+  const weekendRectH = settings.height - settings.scaleHeight;
+
+  for (let day = 0; day <= scale.totalDays - 1; day++) {
+    const dayOfWeek = currentDay.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const x = day * scale.pxPerDay;
+    const textX = x + scale.pxPerDay / 2;
+
+    const oneFourthScaleH = settings.scaleHeight / 4;
+    const lineY = oneFourthScaleH * 3;
+    const lineH = oneFourthScaleH;
+
+    const weekendRect = isWeekend
+      ? svg`<rect x=${x} y=${settings.scaleHeight} width=${scale.pxPerDay} height=${weekendRectH} class="weekend" />`
+      : null;
+
+    // const lastDayLine =
+    //   day === scale.totalDays - 1
+    //     ? svg`<line
+    //     x1=${x + scale.pxPerDay}
+    //     x2=${x + scale.pxPerDay}
+    //     y1=${lineY}
+    //     y2=${settings.scaleHeight}
+    //     class="line"
+    //   />`
+    //     : null;
+    //     ${lastDayLine}
+
+    const currDate = currentDay.getDate();
+    // const dayLine =
+    //   currDate !== 1
+    //     ? svg`<rect x=${x} y=${lineY} width="1" height=${lineH}
+    //     class="line scale day"
+    //     />`
+    //     : null;
 
     ticks.push({
-      id,
+      id: day,
       tpl: svg`
       <g>
-        ${
-          day === 0 || day === 6
-            ? svg`<rect id="xyz" x=${x} y=${y0} width=${t} height=${RH} class="weekend" />`
-            : null
-        }
-        <line x1=${x} x2=${x} y1=${y0} y2=${offsetY} class="line"/>
-        <text x=${textX} y=${offsetY * 0.75} class="text small">
+        ${weekendRect}
+        <rect x=${x} y=${lineY} width="1" height=${lineH}
+          class="line scale day"          
+        />
+        <text 
+          id=${day} 
+          x=${textX} 
+          y=${settings.scaleHeight * 0.75} 
+          class="text small">
           ${currDate}
         </text>
-        ${
-          i === len - 1
-            ? svg`<line
-              x1=${x + t}
-              x2=${x + t}
-              y1=${y0}
-              y2=${offsetY}
-              class="line"              
-            />`
-            : null
-        }
+
+   
       </g>`,
     });
+
+    currentDay.setDate(currentDay.getDate() + 1);
   }
+
   return svg`
-    <g id="dayHeader">
-      ${YearMonth({
-        //      styles,
-        unit,
-        dates,
-        offsetY,
-        minTime,
-        maxTime,
-        maxTextWidth,
-      })}
-      
-      ${repeat(
-        ticks,
-        (i) => i.id,
-        (i) => i.tpl
-      )}   
-    </g>`;
+  <g id="dayHeader">
+    ${YearMonth({ ...settings })}
+    
+    ${repeat(
+      ticks,
+      (i) => i.id,
+      (i) => i.tpl
+    )}   
+  </g>`;
 }

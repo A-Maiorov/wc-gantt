@@ -1,16 +1,10 @@
 import { svg } from "lit";
-import { Item } from "../types";
+import { ComponentSettings, Item } from "../types";
 import { repeat } from "lit/directives/repeat.js";
-
-export type LabelsOptions = {
-  data: Item[];
-  rowHeight: number;
-  offsetY: number;
-};
 
 export function Labels(
   this: HTMLElement,
-  { data, rowHeight, offsetY }: LabelsOptions
+  { data, rowHeight, scaleHeight: offsetY }: ComponentSettings
 ) {
   const handler = (v: Item) => {
     const ev = new CustomEvent<Item>("item-click", { detail: v });

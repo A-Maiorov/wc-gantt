@@ -1,59 +1,50 @@
 import { svg } from "lit";
-import { getDates, addDays, DAY, getWeekNumber } from "../utils";
+import { addDays, MsInDAY, getWeekNumber, getWeeks } from "../utils";
 import { YearMonth } from "./YearMonth";
 import { repeat } from "lit/directives/repeat.js";
-export type WeekHeaderOptions = {
-  unit: number;
-  minTime: number;
-  maxTime: number;
-  height: number;
-  offsetY: number;
-  maxTextWidth: number;
-};
+import { ComponentSettings } from "../types";
 
-export function WeekHeader({
-  unit,
-  minTime,
-  maxTime,
-  height,
-  offsetY,
-  maxTextWidth,
-}: WeekHeaderOptions) {
-  const dates = getDates(minTime, maxTime);
-  const weeks = dates.filter((v) => new Date(v).getDay() === 0);
-  weeks.push(maxTime);
+export function WeekHeader(settings: ComponentSettings) {
+  const weeks = getWeeks(settings.timeScale.start, settings.timeScale.end);
+
   const ticks = [];
-  const x0 = maxTextWidth;
-  const y0 = offsetY;
-  const RH = height - y0;
-  const d = DAY / unit;
+  const y0 = settings.scaleHeight;
+  const RH = settings.height - y0;
+  const d = settings.timeScale.pxPerDay;
   const len = weeks.length - 1;
+
+  const oneFourthScaleH = settings.scaleHeight / 4;
+  const lineY = oneFourthScaleH * 3;
+  const lineH = oneFourthScaleH;
+
   for (let i = 0; i < len; i++) {
     const cur = new Date(weeks[i]);
-    const x = x0 + (weeks[i] - minTime) / unit;
+    const x = settings.timeScale.dateToPx(cur);
     const curDay = cur.getDate();
     const prevDay = addDays(cur, -1).getDate();
     const id = "week_" + i + "_" + prevDay + "-" + curDay;
 
-    const textOffsetY = offsetY - 10; //offsetY * 0.75;
+    const textMargin = settings.scaleHeight / 6;
+    const textOffsetY = settings.scaleHeight - textMargin;
+    const weekTextOffsetY = oneFourthScaleH * 2 + textMargin;
 
     const weekNumber = getWeekNumber(addDays(cur, 1));
     ticks.push({
       id,
       tpl: svg`
       <g id=${id}>
-        <rect x=${x - d} y=${y0} width=${d * 2} height=${RH} 
+        <rect x=${x - d * 2} y=${y0} width=${d * 2} height=${RH} 
           class="weekend"/>
           <text x=${x - 3} y=${textOffsetY} class="text small end">
           ${prevDay}
         </text>       
-        <line x1=${x} x2=${x} y1=${offsetY / 2} y2=${offsetY} 
-          class="line"/>
+        <rect x=${x} width="1" y=${lineY} height=${lineH}         
+          class="line scale"/>
         <text x=${x + 3} y=${textOffsetY} class="text small start">
           ${curDay}
         </text>        
-        <text x=${x + 3 + 25} y=${textOffsetY - 13} 
-          class="text tiny">
+        <text x=${x + 3 * d} y=${weekTextOffsetY} 
+          class="text tiny start">
             Week ${weekNumber}
         </text>    
       </g>`,
@@ -61,15 +52,7 @@ export function WeekHeader({
   }
   return svg`
     <g id="weekHeader">
-      ${YearMonth({
-        //  styles,
-        unit,
-        dates,
-        offsetY,
-        minTime,
-        maxTime,
-        maxTextWidth,
-      })}
+      ${YearMonth({ ...settings })}
 
       ${repeat(
         ticks,

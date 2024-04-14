@@ -1,26 +1,24 @@
 import { type WCGantt } from "./WcGantt";
 import { ComponentSettings, Link, LinkAddedEvArgs } from "./types";
 
-export function configureAddLink(
-  this: WCGantt,
-  $svg: SVGElement,
-  settings: ComponentSettings
-) {
-  function isStart(el: HTMLElement) {
-    return el.classList.contains("gantt-ctrl-start");
+export function configureAddLink(this: WCGantt) {
+  const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
+
+  function isStart(el: SVGCircleElement) {
+    return el.classList.contains("ctl-start");
   }
 
-  function isFinish(el: HTMLElement) {
-    return el.classList.contains("gantt-ctrl-finish");
+  function isFinish(el: SVGCircleElement) {
+    return el.classList.contains("ctl-finish");
   }
 
-  const addLink = (s: HTMLElement, e: HTMLElement) => {
-    const sid = parseInt(s.dataset["id"]);
-    const eid = parseInt(e.dataset["id"]);
+  const addLink = (s: SVGCircleElement, e: SVGCircleElement) => {
+    const sid = s.dataset["id"];
+    const eid = e.dataset["id"];
     if (sid === eid) return;
 
-    const startNode = settings.data.find((t) => t.id === sid);
-    const endNode = settings.data.find((t) => t.id === eid);
+    const startNode = this.settings.data.find((t) => t.id.toString() === sid);
+    const endNode = this.settings.data.find((t) => t.id.toString() === eid);
 
     let startType = isStart(s) ? "S" : "F";
     let endType = isStart(e) ? "S" : "F";
@@ -38,7 +36,7 @@ export function configureAddLink(
       type: `${startType}${endType}`,
     } as Link;
 
-    const startItem = settings.data.find((x) => x.id == sid);
+    const startItem = this.settings.data.find((x) => x.id == sid);
     if (startItem) {
       const existingLink = startItem.links.find(
         (l) =>
@@ -70,51 +68,64 @@ export function configureAddLink(
 
   const NS = "http://www.w3.org/2000/svg";
   let moving = false;
-  let $start: HTMLElement = null;
-  let $line: SVGElement = null;
+  let start: SVGCircleElement = null;
+  let line: SVGLineElement = null;
 
-  $svg.addEventListener("mousedown", (e) => {
+  const getControlX = (ctl: SVGCircleElement) => {
+    const svgBar = ctl.parentElement as unknown as SVGSVGElement;
+
+    return svgBar.x.baseVal.value + ctl.cx.baseVal.value;
+  };
+  const getControlY = (ctl: SVGCircleElement) => {
+    const svgBar = ctl.parentElement as unknown as SVGSVGElement;
+
+    return svgBar.y.baseVal.value + ctl.cy.baseVal.value;
+  };
+
+  svg.addEventListener("mousedown", (e) => {
     if (
-      !isStart(e.target as HTMLElement) &&
-      !isFinish(e.target as HTMLElement)
+      !isStart(e.target as SVGCircleElement) &&
+      !isFinish(e.target as SVGCircleElement)
     ) {
       return;
     }
     e.preventDefault();
-    $start = e.target as HTMLElement;
+    start = e.target as SVGCircleElement;
+    const svgBar = start.parentElement as unknown as SVGSVGElement;
 
     this.shadowRoot
-      .querySelectorAll(".gantt-ctrl-start,.gantt-ctrl-finish")
+      .querySelectorAll(".activity.ctl-start,.activity.ctl-finish")
       .forEach((elem) => {
         (elem as HTMLElement).setAttribute("active", "active");
       });
     moving = true;
-    $line = document.createElementNS(NS, "line");
-    const x = $start.getAttribute("cx");
-    const y = $start.getAttribute("cy");
-    $line.setAttribute("x1", x);
-    $line.setAttribute("y1", y);
-    $line.setAttribute("x2", x);
-    $line.setAttribute("y2", y);
-    $line.classList.add("add-link-line");
-    $svg.appendChild($line);
+    line = document.createElementNS(NS, "line");
+    const x = getControlX(start).toString(); //$start.getAttribute("cx");
+    const y = getControlY(start).toString(); //$start.getAttribute("cy");
+    line.setAttribute("x1", x);
+    line.setAttribute("y1", y);
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", y);
+    line.classList.add("add-link-line");
+    svg.appendChild(line);
   });
 
-  $svg.addEventListener("mousemove", (e) => {
-    const target = e.target as HTMLElement;
+  svg.addEventListener("mousemove", (e) => {
+    const target = e.target as SVGCircleElement;
     if (!moving) return;
     e.preventDefault();
     if (isStart(target) || isFinish(target)) {
-      const x = target.getAttribute("cx");
-      const y = target.getAttribute("cy");
-      $line.setAttribute("x2", x);
-      $line.setAttribute("y2", y);
+      const x = getControlX(target).toString();
+      const y = getControlY(target).toString();
+
+      line.setAttribute("x2", x);
+      line.setAttribute("y2", y);
     } else {
       const x = e.clientX;
       const y = e.clientY;
-      const rect = $svg.getBoundingClientRect();
-      $line.setAttribute("x2", (x - rect.left).toString());
-      $line.setAttribute("y2", (y - rect.top).toString());
+      const rect = svg.getBoundingClientRect();
+      line.setAttribute("x2", (x - rect.left).toString());
+      line.setAttribute("y2", (y - rect.top).toString());
     }
   });
 
@@ -125,27 +136,27 @@ export function configureAddLink(
     e.stopPropagation();
 
     this.shadowRoot
-      .querySelectorAll(".gantt-ctrl-start,.gantt-ctrl-finish")
+      .querySelectorAll(".ctl-start,.ctl-finish")
       .forEach((elem) => {
         (elem as HTMLElement).removeAttribute("active");
       });
     moving = false;
 
-    if ($line) {
-      $svg.removeChild($line);
-      $line = null;
+    if (line) {
+      svg.removeChild(line);
+      line = null;
     }
   };
 
-  $svg.addEventListener("mouseup", (e) => {
+  svg.addEventListener("mouseup", (e) => {
     resetMovingControls(e);
 
-    const target = e.target as HTMLElement;
+    const target = e.target as SVGCircleElement;
     const isCtrl = isStart(target) || isFinish(target);
-    if ($start && isCtrl) {
-      addLink($start, target);
+    if (start && isCtrl) {
+      addLink(start, target);
     }
-    $start = null;
+    start = null;
   });
 
   this.addEventListener("mouseout", (e) => {

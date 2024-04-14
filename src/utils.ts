@@ -1,4 +1,4 @@
-export const DAY = 24 * 3600 * 1000;
+export const MsInDAY = 24 * 3600 * 1000;
 
 export function addDays(date: Date, days: number) {
   const d = new Date(date.valueOf());
@@ -9,10 +9,31 @@ export function addDays(date: Date, days: number) {
 export function getDates(begin: number, end: number) {
   const dates = [];
   let s = new Date(begin);
-  s.setHours(24, 0, 0, 0);
+  s.setHours(1, 0, 0, 0);
   while (s.getTime() <= end) {
     dates.push(s.getTime());
     s = addDays(s, 1);
+  }
+  return dates;
+}
+
+export function getWeeks(begin: Date, end: Date) {
+  const dates: Date[] = [];
+
+  let s = new Date(begin.getFullYear(), begin.getMonth(), begin.getDate(), 1);
+  const day = s.getDay();
+  if (day !== 1) s.setDate(s.getDate() - day + 1); //week starts on Monday
+  dates.push(new Date(s.getTime()));
+
+  let e = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 1);
+  const eDay = e.getDay();
+  if (eDay !== 1) e.setDate(e.getDate() + (7 - eDay)); //week starts on Monday
+  dates.push(new Date(e.getTime()));
+
+  while (s < e) {
+    s.setDate(s.getDate() + 7);
+
+    dates.push(new Date(s.getTime()));
   }
   return dates;
 }
@@ -48,19 +69,12 @@ export function p2s(arr: number[][]) {
 }
 
 export function getWeekNumber(date: Date) {
-  date.setHours(0, 0, 0, 0);
-  // Thursday in current week decides the year.
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  // January 4 is always in week 1.
-  var week1 = new Date(date.getFullYear(), 0, 4);
-  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-  return (
-    1 +
-    Math.round(
-      ((date.getTime() - week1.getTime()) / 86400000 -
-        3 +
-        ((week1.getDay() + 6) % 7)) /
-        7
-    )
+  const startDate = new Date(date.getFullYear(), 0, 1);
+  let days = Math.floor(
+    (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
   );
+
+  const n = Math.ceil(days / 7);
+
+  return n + 1;
 }

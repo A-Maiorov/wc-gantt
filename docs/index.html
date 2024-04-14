@@ -20,8 +20,15 @@
     <label for="showLinks">Show Links</label>
     <input type="checkbox" id="showDelay" checked>
     <label for="showDelay">Show Delay</label>
-    <button type="button" id="autoSchedule">Auto Schedule</button>
   </div>
+
+  <style>
+
+    wc-gantt{
+      /* --gantt-layout-time-scale-height: 40px; */
+    }
+
+  </style>
   
   <wc-gantt ></wc-gantt>
 
@@ -34,7 +41,7 @@
     function ready() {
 
       const opts = {
-        viewMode: "week"      
+        viewMode: "week"
       };
 
       const wcGantt = document.querySelector("wc-gantt");
@@ -42,6 +49,12 @@
       wcGantt.options = window.opts;
 
       wcGantt.addEventListener("item-click", (i) => {
+        console.log(i);
+      });
+      wcGantt.addEventListener("item-moved", (i) => {
+        console.log(i);
+      });
+      wcGantt.addEventListener("item-resized", (i) => {
         console.log(i);
       });
 

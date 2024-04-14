@@ -1,4 +1,4 @@
-import { minDate, maxDate, addDays } from "./utils";
+import { minDate, maxDate, addDays, MsInDAY } from "./utils";
 import { customElement, property } from "lit/decorators.js";
 import { LitElement, css, html } from "lit";
 import {
@@ -9,12 +9,15 @@ import {
   isGroup,
   isMilestone,
 } from "./types";
-import { Gantt } from "./gantt";
+import { Gantt } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
 import { linkLineCss } from "./gantt/linkLine.css";
 import { barCss } from "./gantt/bar.css";
 import { layoutCss } from "./gantt/layout.css";
 import { configureAddLink } from "./addLink";
+import { configureMoveItem } from "./moveItem";
+import { TimeScale } from "./timeScale";
+import { configureResizeItem } from "./resizeItem";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -29,17 +32,23 @@ declare global {
  * @property {WcGanttOptions} options Reactive property, not reflected to attribute
  * @fires before-link-added CustomEvent : LinkAddedEvArgs
  * @fires item-click CustomEvent : Item
+ * @fires item-moved CustomEvent : Item
  */
 @customElement("wc-gantt")
 export class WCGantt extends LitElement {
   static styles = [
     css`
       :host {
-        display: block;
+        display: flex;
         position: relative;
         width: 100%;
         height: 100%;
         box-sizing: border-box;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+      .gantt {
+        overflow: auto;
       }
     `,
     layoutCss,
@@ -52,35 +61,67 @@ export class WCGantt extends LitElement {
     super.connectedCallback();
   }
 
-  #settings: ComponentSettings;
+  settings: ComponentSettings;
 
   private updateSettings() {
-    const thickWidth = parseFloat(
+    const rowHeight = parseFloat(
+      getComputedStyle(this).getPropertyValue("--gantt-layout-row-height")
+    );
+    const scaleHeight = parseFloat(
       getComputedStyle(this).getPropertyValue(
-        "--gantt-layout-thick-line-stroke-width"
+        "--gantt-layout-time-scale-height"
       )
     );
+    const barHeight = parseFloat(
+      getComputedStyle(this).getPropertyValue("--gantt-layout-bar-height")
+    );
+
+    const data = this.flattenData(this.data);
 
     let start: Date | null = null;
     let end: Date | null = null;
-    this.data.forEach((v) => {
+    data.forEach((v) => {
       start = minDate(start, v.start);
       end = maxDate(end, v.end);
     });
+
     start = start || new Date();
     end = end || new Date();
 
-    this.#settings = {
+    const defaultOpts: WcGanttOptions = {
       viewMode: "week",
-      barHeight: 16,
-      rowHeight: 40,
-      offsetY: 60,
+
+      showDelay: true,
+      showLinks: true,
+      showLabels: true,
+    };
+
+    this.settings = {
+      ...defaultOpts,
       ...this.options,
-      thickWidth,
       start,
       end,
-      data: this.flattenData(this.data),
+      width: 0,
+      height: 0,
+      scaleHeight: scaleHeight,
+      rowHeight: rowHeight,
+      barHeight: barHeight,
+      data,
+      timeScale: undefined,
     };
+    this.settings.timeScale = new TimeScale(
+      addDays(start, -1),
+      addDays(end, 7),
+      this.settings.viewMode
+    );
+
+    this.settings.width =
+      this.settings.timeScale.totalDays * this.settings.timeScale.pxPerDay;
+    this.settings.height =
+      this.settings.data.length * this.settings.rowHeight +
+      this.settings.scaleHeight;
+
+    this.setupInteractions();
   }
 
   private flattenData(data: Item[], path?: string) {
@@ -105,7 +146,7 @@ export class WCGantt extends LitElement {
       throw Error("Gantt item is not valid: id:" + i.id + "; text: " + i.text);
 
     i.start ??= new Date();
-    i.end ??= addDays(i.start, 1);
+    i.end ??= addDays(i.start, 5);
 
     if (i.start > i.end)
       Error(
@@ -117,26 +158,38 @@ export class WCGantt extends LitElement {
       );
   }
 
+  ___lastMovement: number = 0;
+  get suppressClick() {
+    return new Date().getTime() - this.___lastMovement < 100;
+  }
+
   @property({ type: Object, attribute: false })
   options: WcGanttOptions;
 
   @property({ type: Array, attribute: false })
   data: Item[];
 
-  protected firstUpdated() {
-    const svg = this.shadowRoot.getElementById(
-      "gantt"
-    ) as unknown as SVGElement;
-    configureAddLink.bind(this)(svg, this.#settings);
+  private interactionReady = false;
+
+  private async setupInteractions() {
+    if (this.interactionReady) return;
+    await this.updateComplete;
+    configureAddLink.bind(this)();
+    configureMoveItem.bind(this)();
+    configureResizeItem.bind(this)();
+    this.interactionReady = true;
   }
 
   render() {
+    if (!this.data || this.data.length === 0) return "No data";
     this.updateSettings();
-    return html`${Gantt.bind(this)(this.#settings)}`;
+    return html`<div class="labels">
+        ${this.settings.data.map((x) => html`<div class="lbl">${x.text}</div>`)}
+      </div>
+      <div class="gantt">${Gantt.bind(this)()}</div>`;
   }
 }
 
-interface FlattenedItem extends Item {
+export interface FlattenedItem extends Item {
   path: string;
-  nested: undefined;
 }

@@ -31,14 +31,14 @@
   "author": "art",
   "license": "MIT",
   "peerDependencies": {
-    "lit": "3.1.0"
+    "lit": "3.1.2"
   },
-  "devDependencies": {
-    "eslint": "8.56.0",
-    "esbuild": "0.19.11",
-    "esbuild-plugin-minify-html-literals": "1.0.6",
-    "esbuild-plugin-lit-css": "2.1.0",
+  "dependencies": {
+    "eslint": "9.0.0",
+    "esbuild": "0.20.2",
+    "esbuild-plugin-minify-html-literals": "2.0.0",
+    "esbuild-plugin-lit-css": "3.0.0",
     "eslint-plugin-lit": "1.11.0",
-    "typescript": "5.3.3"
+    "typescript": "5.4.5"
   }
 }

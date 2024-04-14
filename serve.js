@@ -1,6 +1,6 @@
 import { context } from "esbuild";
-import { minifyHTMLLiteralsPlugin } from "esbuild-plugin-minify-html-literals";
-import { litCssPlugin } from "esbuild-plugin-lit-css";
+// import { minifyHTMLLiteralsPlugin } from "esbuild-plugin-minify-html-literals";
+// import { litCssPlugin } from "esbuild-plugin-lit-css";
 /**
  * @type import("esbuild").BuildOptions
  */
@@ -17,10 +17,10 @@ const appOptions = {
   outdir: "docs",
   entryPoints: ["src/WcGantt.ts"],
   plugins: [
-    minifyHTMLLiteralsPlugin({
-      minifyOptions: { keepClosingSlash: true },
-    }),
-    litCssPlugin(),
+    // minifyHTMLLiteralsPlugin({
+    //   minifyOptions: { keepClosingSlash: true },
+    // }),
+    // litCssPlugin(),
   ],
 };
 

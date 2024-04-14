@@ -1,15 +1,42 @@
 const data = [
   {
     id: 1,
-    start: new Date("2023-11-01T11:52:57.975Z"),
     percent: 0.54,
     text: "1 Waterfall model",
-    end: new Date("2024-02-28T11:52:57.975Z"),
     type: "group",
     nested: [
       {
+        id: 111,
+        percent: 0.34,
+        text: "SUB Waterfall model",
+        type: "group",
+        nested: [
+          {
+            id: 1111,
+            start: new Date("2024-01-04T11:52:57.975Z"),
+            percent: 0.35,
+            links: [
+              {
+                source: 1111,
+                target: 1112,
+                type: "FS",
+              },
+            ],
+            text: "1.1.1 SUB Requirements",
+            end: new Date("2024-01-28T11:52:57.975Z"),
+          },
+          {
+            id: 1112,
+            start: new Date("2024-01-28T11:52:57.975Z"),
+            percent: 0.45,
+            text: "1.1.2 SUB Design",
+            end: new Date("2024-05-15T11:52:57.975Z"),
+          },
+        ],
+      },
+      {
         id: 11,
-        start: new Date("2023-12-04T11:52:57.975Z"),
+        start: new Date("2024-01-04T11:52:57.975Z"),
         percent: 0.65,
         links: [
           {
@@ -23,7 +50,7 @@ const data = [
       },
       {
         id: 12,
-        start: new Date("2023-11-01T11:52:57.975Z"),
+        start: new Date("2024-01-15T11:52:57.975Z"),
         percent: 0.46,
         links: [
           {
@@ -33,12 +60,12 @@ const data = [
           },
         ],
         text: "1.2 Design",
-        end: new Date("2024-01-01T11:52:57.975Z"),
+        end: new Date("2024-02-01T11:52:57.975Z"),
       },
       {
         id: 13,
         type: "milestone",
-        start: new Date("2023-11-16T11:52:57.975Z"),
+        start: new Date("2024-03-16T11:52:57.975Z"),
         links: [
           {
             source: 13,
@@ -52,45 +79,42 @@ const data = [
           },
         ],
         text: "1.3 Implement",
-        end: new Date("2023-11-16T11:52:57.975Z"),
       },
       {
         id: 14,
-        start: new Date("2023-11-21T11:52:57.975Z"),
+        start: new Date("2024-02-21T11:52:57.975Z"),
         percent: 0.71,
         links: [],
         text: "1.4 Verification",
-        end: new Date("2023-11-27T11:52:57.975Z"),
+        end: new Date("2024-02-27T11:52:57.975Z"),
       },
     ],
   },
   {
     id: 2,
-    start: new Date("2023-10-31T11:52:57.975Z"),
     percent: 0.45,
     text: "2 Development",
-    end: new Date("2024-02-09T11:52:57.975Z"),
     type: "group",
     nested: [
       {
         id: 21,
-        start: new Date("2023-12-12T11:52:57.975Z"),
+        start: new Date("2024-03-12T11:52:57.975Z"),
         percent: 0.64,
         links: [],
         text: "2.1 Preliminary",
-        end: new Date("2024-01-07T11:52:57.975Z"),
+        end: new Date("2024-04-07T11:52:57.975Z"),
       },
       {
         id: 22,
-        start: new Date("2023-10-31T11:52:57.975Z"),
+        start: new Date("2024-02-28T11:52:57.975Z"),
         percent: 0.13,
         links: [],
         text: "2.2 Systems design",
-        end: new Date("2023-12-23T11:52:57.975Z"),
+        end: new Date("2024-03-23T11:52:57.975Z"),
       },
       {
         id: 23,
-        start: new Date("2023-11-04T11:52:57.975Z"),
+        start: new Date("2024-03-04T11:52:57.975Z"),
         percent: 0.24,
         links: [
           {
@@ -100,15 +124,15 @@ const data = [
           },
         ],
         text: "2.3 Development",
-        end: new Date("2023-12-05T11:52:57.975Z"),
+        end: new Date("2024-04-05T11:52:57.975Z"),
       },
       {
         id: 24,
-        start: new Date("2023-12-10T11:52:57.975Z"),
+        start: new Date("2024-04-10T11:52:57.975Z"),
         percent: 0.78,
         links: [],
         text: "2.4 Integration",
-        end: new Date("2024-02-09T11:52:57.975Z"),
+        end: new Date("2024-05-09T11:52:57.975Z"),
       },
     ],
   },
