@@ -10,7 +10,7 @@ const appOptions = {
   minify: true,
   minifyWhitespace: true,
   minifySyntax: true,
-  sourcemap: true,
+  sourcemap: false,
   target: ["es2020", "chrome89", "firefox90", "safari14"],
   platform: "browser",
   format: "esm",

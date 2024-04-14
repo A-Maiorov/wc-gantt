@@ -12,7 +12,7 @@
     "declaration": true,
     "declarationDir": "dist",
     "emitDeclarationOnly": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "removeComments": false
   },
   "include": ["src"],
