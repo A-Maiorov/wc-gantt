@@ -1,4 +1,5 @@
-import { type WCGantt } from "./WcGantt";
+import { type FlattenedItem, type WCGantt } from "./WcGantt";
+import { resizeItem } from "./resizeItem";
 
 import { Item, isGroup } from "./types";
 
@@ -11,7 +12,7 @@ export function configureMoveItem(this: WCGantt) {
   let rectSvg: SVGRectElement = undefined;
 
   let itemId: string | number | undefined;
-  let item: Item;
+  let item: FlattenedItem;
 
   function isBarRect(el: unknown): el is SVGRectElement {
     const e = el as SVGElement;
@@ -66,6 +67,14 @@ export function configureMoveItem(this: WCGantt) {
         itm.end = new Date(itm.end.getTime() + diff);
       }
     }
+
+    for (const itm of item.parents) {
+      if (item.start.getTime() === itm.start.getTime())
+        resizeItem(itm, diff, true);
+      else if (item.end.getTime() === itm.end.getTime())
+        resizeItem(itm, diff, false);
+    }
+
     item.start = new Date(item.start.getTime() + diff);
     item.end = new Date(item.end.getTime() + diff);
     this.requestUpdate();

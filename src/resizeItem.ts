@@ -1,8 +1,27 @@
-import { type WCGantt } from "./WcGantt";
+import { type FlattenedItem, type WCGantt } from "./WcGantt";
 
 import { Item, isGroup } from "./types";
 import { MsInDAY } from "./utils";
 
+export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
+  if (resizeStart) {
+    const newStart = new Date(itm.start.getTime() + diffMs);
+    if (diffMs > 0) {
+      // moving start right = shrink item
+      if (itm.end.getTime() - newStart.getTime() < MsInDAY)
+        itm.end = new Date(itm.end.getTime() + diffMs);
+    }
+    itm.start = newStart;
+  } else {
+    const newEnd = new Date(itm.end.getTime() + diffMs);
+    if (diffMs < 0) {
+      // moving end left = shrink item
+      if (newEnd.getTime() - itm.start.getTime() < MsInDAY)
+        itm.start = new Date(itm.start.getTime() + diffMs);
+    }
+    itm.end = newEnd;
+  }
+};
 export function configureResizeItem(this: WCGantt) {
   const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
   let moving = false;
@@ -12,7 +31,7 @@ export function configureResizeItem(this: WCGantt) {
   //let rectSvg: SVGRectElement = undefined;
 
   let itemId: string | number | undefined;
-  let item: Item;
+  let item: FlattenedItem;
   let resizeStart = false;
   let resizeEnd = false;
 
@@ -66,36 +85,19 @@ export function configureResizeItem(this: WCGantt) {
     moving = true;
     const diff = e.movementX * this.settings.timeScale.msPerPx;
 
-    if (isGroup(item)) {
-      for (const itm of item.nested) {
-        resizeItem(itm, diff);
-      }
+    // if (isGroup(item)) {
+    for (const itm of item.parents) {
+      if (resizeStart && item.start.getTime() === itm.start.getTime())
+        resizeItem(itm, diff, resizeStart);
+      if (resizeEnd && item.end.getTime() === itm.end.getTime())
+        resizeItem(itm, diff, resizeStart);
     }
-    resizeItem(item, diff);
+    // }
+    resizeItem(item, diff, resizeStart);
     // if (resizeStart) item.start = new Date(item.start.getTime() + diff);
     // else item.end = new Date(item.end.getTime() + diff);
 
     this.requestUpdate();
-  };
-
-  const resizeItem = (itm: Item, diffMs: number) => {
-    if (resizeStart) {
-      const newStart = new Date(itm.start.getTime() + diffMs);
-      if (diffMs > 0) {
-        // moving start right = shrink item
-        if (itm.end.getTime() - newStart.getTime() < MsInDAY)
-          itm.end = new Date(itm.end.getTime() + diffMs);
-      }
-      itm.start = newStart;
-    } else {
-      const newEnd = new Date(itm.end.getTime() + diffMs);
-      if (diffMs < 0) {
-        // moving end left = shrink item
-        if (newEnd.getTime() - itm.start.getTime() < MsInDAY)
-          itm.start = new Date(itm.start.getTime() + diffMs);
-      }
-      itm.end = newEnd;
-    }
   };
 
   const onMouseUp = (e: MouseEvent) => {

@@ -1,3 +1,4 @@
+import type { FlattenedItem } from "./WcGantt";
 import { TimeScale } from "./timeScale";
 
 export interface Link {
@@ -97,7 +98,7 @@ export interface WcGanttOptions {
 export interface ComponentSettings extends WcGanttOptions {
   start: Date;
   end: Date;
-  data: Item[];
+  data: FlattenedItem[];
   width: number;
   height: number;
   scaleHeight: number; // default: 60,

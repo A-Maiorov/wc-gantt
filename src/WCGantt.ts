@@ -8,6 +8,7 @@ import {
   isActivity,
   isGroup,
   isMilestone,
+  type Group,
 } from "./types";
 import { Gantt } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
@@ -124,17 +125,22 @@ export class WCGantt extends LitElement {
     this.setupInteractions();
   }
 
-  private flattenData(data: Item[], path?: string) {
+  private flattenData(data: Item[], path?: string, parent?: FlattenedItem) {
     const d: FlattenedItem[] = [];
     let ind = 0;
     for (const i of data) {
       this.validateItem(i);
       const f = i as FlattenedItem;
+
+      f.parents = [];
+      if (parent) f.parents = [...(parent.parents ?? []), parent];
+
       f.path = path ? path + "." + ind : ind.toString();
       f.id ??= f.path;
       d.push(f);
-      if (i.nested?.length > 0) d.push(...this.flattenData(i.nested, f.path));
-
+      if (i.nested?.length > 0) {
+        d.push(...this.flattenData(i.nested, f.path, f));
+      }
       ind++;
     }
     return d;
@@ -192,4 +198,5 @@ export class WCGantt extends LitElement {
 
 export interface FlattenedItem extends Item {
   path: string;
+  parents?: FlattenedItem[];
 }
