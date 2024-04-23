@@ -8,7 +8,7 @@ export interface Link {
 }
 
 export type LinkType = "FS" | "FF" | "SS" | "SF";
-export type ItemType = "activity" | "group" | "milestone";
+export type ItemType = "activity" | "group" | "milestone" | "buffer";
 
 export interface Item {
   id: unknown;
@@ -21,7 +21,7 @@ export interface Item {
   links?: Array<Link>;
 }
 export const isActivity = (i: Item): i is Activity => {
-  const res = !("nested" in i) && (!i.type || i.type === "activity");
+  const res = i.nested == undefined && (!i.type || i.type === "activity");
   if (res && !i.type) i.type = "activity";
   return res;
 };
@@ -32,7 +32,7 @@ export interface Activity extends Item {
 export const isMilestone = (i: Item): i is Milestone => {
   const res =
     "type" in i &&
-    !("nested" in i) &&
+    i.nested == undefined &&
     !("percent" in i) &&
     i.type === "milestone";
   if (res) i.end = i.start;
