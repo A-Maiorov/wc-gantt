@@ -93,6 +93,8 @@ export interface WcGanttOptions {
   showLinks: boolean;
   showLabels: boolean;
   showDelay: boolean;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export interface ComponentSettings extends WcGanttOptions {

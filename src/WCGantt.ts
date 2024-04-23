@@ -79,8 +79,8 @@ export class WCGantt extends LitElement {
 
     const data = this.flattenData(this.data);
 
-    let start: Date | null = null;
-    let end: Date | null = null;
+    let start: Date | null = this.options.minDate ?? null;
+    let end: Date | null = this.options.maxDate ?? null;
     data.forEach((v) => {
       start = minDate(start, v.start);
       end = maxDate(end, v.end);
@@ -109,6 +109,7 @@ export class WCGantt extends LitElement {
       barHeight: barHeight,
       data,
       timeScale: undefined,
+      ...this.options,
     };
     this.settings.timeScale = new TimeScale(
       addDays(start, -1),
@@ -198,7 +199,7 @@ export class WCGantt extends LitElement {
             )}
           </div>
         `
-      : "";
+      : html``;
 
     return html`
       ${labels}
