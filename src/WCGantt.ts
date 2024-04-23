@@ -189,10 +189,21 @@ export class WCGantt extends LitElement {
   render() {
     if (!this.data || this.data.length === 0) return "No data";
     this.updateSettings();
-    return html`<div class="labels">
-        ${this.settings.data.map((x) => html`<div class="lbl">${x.text}</div>`)}
-      </div>
-      <div class="gantt">${Gantt.bind(this)()}</div>`;
+
+    const labels = this.settings.showLabels
+      ? html`
+          <div class="labels">
+            ${this.settings.data.map(
+              (x) => html`<div class="lbl">${x.text}</div>`
+            )}
+          </div>
+        `
+      : "";
+
+    return html`
+      ${labels}
+      <div class="gantt">${Gantt.bind(this)()}</div>
+    `;
   }
 }
 
