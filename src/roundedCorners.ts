@@ -4,7 +4,7 @@ export function createRoundedPathString(p: number[][]) {
     y: i[1],
   }));
   const path = ["M" + pathCoords[0].x + "," + pathCoords[0].y];
-  const curveRadius = 5;
+  const curveRadius = 3;
 
   // Reset indexes, so there are no gaps
   // pathCoords = pathCoords.slice();
@@ -18,10 +18,8 @@ export function createRoundedPathString(p: number[][]) {
 
   for (let i = 0; i < pathCoords.length; i++) {
     // 1. Get current coord and the next two (startpoint, cornerpoint, endpoint) to calculate rounded curve
-    const c2Index =
-      i + 1 > pathCoords.length - 1 ? (i + 1) % pathCoords.length : i + 1;
-    const c3Index =
-      i + 2 > pathCoords.length - 1 ? (i + 2) % pathCoords.length : i + 2;
+    const c2Index = i + 1 > lastInd ? (i + 1) % pathCoords.length : i + 1;
+    const c3Index = i + 2 > lastInd ? (i + 2) % pathCoords.length : i + 2;
 
     const c1 = pathCoords[i];
     const c2 = pathCoords[c2Index];

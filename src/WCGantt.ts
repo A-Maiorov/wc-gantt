@@ -1,4 +1,4 @@
-import { minDate, maxDate, addDays, MsInDAY } from "./utils";
+import { minDate, maxDate, addDays } from "./utils";
 import { customElement, property } from "lit/decorators.js";
 import { LitElement, css, html } from "lit";
 import {
@@ -8,9 +8,8 @@ import {
   isActivity,
   isGroup,
   isMilestone,
-  type Group,
 } from "./types";
-import { Gantt } from "./gantt/Gantt";
+import { Gantt, getHeader } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
 import { linkLineCss } from "./gantt/linkLine.css";
 import { barCss } from "./gantt/bar.css";
@@ -39,8 +38,12 @@ declare global {
 export class WCGantt extends LitElement {
   static styles = [
     css`
+      svg {
+        display: block;
+      }
       :host {
         display: flex;
+        flex-direction: column;
         position: relative;
         width: 100%;
         height: 100%;
@@ -49,7 +52,41 @@ export class WCGantt extends LitElement {
         white-space: nowrap;
       }
       .gantt {
-        overflow: auto;
+        height: fit-content;
+        overflow: hidden;
+        overflow-x: scroll;
+        scrollbar-width: none;
+      }
+      .gantt-v {
+        overflow: hidden;
+        overflow-y: scroll;
+        display: flex;
+        height: 100%;
+      }
+
+      .time-scale {
+        width: auto;
+        overflow: hidden;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+
+      .time-scale {
+        transform: rotateX(180deg);
+        overflow-x: auto;
+      }
+      .time-scale > svg {
+        transform: rotateX(180deg);
+      }
+
+      .labels-container {
+        box-shadow: 6px 0 5px -4px #88888878;
+        height: fit-content;
+        box-sizing: border-box;
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        margin-top: calc(var(--gantt-layout-line-width) / 2);
       }
     `,
     layoutCss,
@@ -76,11 +113,14 @@ export class WCGantt extends LitElement {
     const barHeight = parseFloat(
       getComputedStyle(this).getPropertyValue("--gantt-layout-bar-height")
     );
+    const lineWidth = parseFloat(
+      getComputedStyle(this).getPropertyValue("--gantt-layout-line-width")
+    );
 
     const data = this.flattenData(this.data);
 
-    let start: Date | null = this.options.minDate ?? null;
-    let end: Date | null = this.options.maxDate ?? null;
+    let start: Date | null = this.options?.minDate ?? null;
+    let end: Date | null = this.options?.maxDate ?? null;
     data.forEach((v) => {
       start = minDate(start, v.start);
       end = maxDate(end, v.end);
@@ -102,11 +142,13 @@ export class WCGantt extends LitElement {
       ...this.options,
       start,
       end,
+      labelsWidth: 0,
       width: 0,
       height: 0,
       scaleHeight: scaleHeight,
       rowHeight: rowHeight,
       barHeight: barHeight,
+      lineWidth,
       data,
       timeScale: undefined,
       ...this.options,
@@ -119,9 +161,7 @@ export class WCGantt extends LitElement {
 
     this.settings.width =
       this.settings.timeScale.totalDays * this.settings.timeScale.pxPerDay;
-    this.settings.height =
-      this.settings.data.length * this.settings.rowHeight +
-      this.settings.scaleHeight;
+    this.settings.height = this.settings.data.length * this.settings.rowHeight;
 
     this.setupInteractions();
   }
@@ -155,6 +195,9 @@ export class WCGantt extends LitElement {
     i.start ??= new Date();
     i.end ??= addDays(i.start, 5);
 
+    i.start.setHours(1, 0, 0, 0);
+    i.end.setHours(1, 0, 0, 0);
+
     if (i.start > i.end)
       Error(
         "Gantt item is not valid: id:" +
@@ -187,6 +230,56 @@ export class WCGantt extends LitElement {
     this.interactionReady = true;
   }
 
+  private __timeScaleEl: HTMLDivElement;
+  get timeScaleElement() {
+    if (!this.__timeScaleEl)
+      this.__timeScaleEl =
+        this.renderRoot.querySelector<HTMLDivElement>(".time-scale");
+
+    return this.__timeScaleEl;
+  }
+
+  private __ganttEl: HTMLDivElement;
+  get ganttElement() {
+    if (!this.__ganttEl)
+      this.__ganttEl = this.renderRoot.querySelector<HTMLDivElement>(".gantt");
+
+    return this.__ganttEl;
+  }
+
+  private scrollReady = false;
+
+  protected updated() {
+    if (!this.data || this.data.length === 0 || this.scrollReady) return;
+    const el = this.renderRoot
+      .querySelector("slot")
+      .assignedElements({ flatten: true })[0];
+    if (!el) return;
+
+    const config: MutationObserverInit = {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    };
+
+    const getLabelsWidth = () => {
+      const w = (el as HTMLElement).clientWidth ?? 0;
+      this.settings.labelsWidth = w;
+      this.timeScaleElement.style.marginLeft = w + "px";
+      const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
+      this.timeScaleElement.style.marginRight =
+        ganttV.offsetWidth - ganttV.clientWidth + "px";
+      this.requestUpdate();
+    };
+
+    const obs = new MutationObserver(getLabelsWidth);
+    obs.observe(el, config);
+    if (el.shadowRoot) obs.observe(el.shadowRoot, config);
+    getLabelsWidth();
+    this.scrollReady = true;
+  }
+
   render() {
     if (!this.data || this.data.length === 0) return "No data";
     this.updateSettings();
@@ -202,9 +295,25 @@ export class WCGantt extends LitElement {
       : html``;
 
     return html`
-      ${labels}
-      <div class="gantt">${Gantt.bind(this)()}</div>
+      <div class="time-scale" @scroll=${this.onScroll}>
+        ${getHeader.bind(this)(this.settings)}
+      </div>
+      <div class="gantt-v">
+        <div class="labels-container">
+          <slot>${labels}</slot>
+        </div>
+        <div class="gantt" @scroll=${this.onScroll}>${Gantt.bind(this)()}</div>
+      </div>
     `;
+  }
+
+  onScroll(e: Event) {
+    if (e.target === this.ganttElement) {
+      this.timeScaleElement.scroll({ left: this.ganttElement.scrollLeft });
+    }
+    if (e.target === this.timeScaleElement) {
+      this.ganttElement.scroll({ left: this.timeScaleElement.scrollLeft });
+    }
   }
 }
 

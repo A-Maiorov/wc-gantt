@@ -6,9 +6,6 @@ export function YearMonth(settings: ComponentSettings) {
   const scale = settings.timeScale;
   const currentDay = new Date(settings.start);
   const ticks = [];
-  const oneFourthScaleH = settings.scaleHeight / 4;
-  const y = 0;
-  const h = oneFourthScaleH * 2;
 
   const currentMonth = currentDay.getMonth();
 
@@ -23,7 +20,6 @@ export function YearMonth(settings: ComponentSettings) {
 
   let firstDayOfPrevMonthX = scale.dateToPx(firstDayOfNextMonth);
 
-  let i = 0;
   while (firstDayOfNextMonth <= scale.end) {
     const month = firstDayOfNextMonth.toLocaleString("default", {
       month: "long",
@@ -39,10 +35,14 @@ export function YearMonth(settings: ComponentSettings) {
       id: str,
       tpl: svg`
       <g>
-        <rect 
-          x=${firstDayOfNextMonthX} 
-          height=${h} width="1"
-          y=${y} class="line scale flip" />
+
+        <line
+          x1=${firstDayOfNextMonthX}
+          x2=${firstDayOfNextMonthX}
+          y1=${0}
+          y2=${settings.scaleHeight / 2}
+          class="line"       
+        />   
         
         <text x=${textX} y=${textBaseLine} 
              class="text small">${str}</text>                
@@ -51,7 +51,6 @@ export function YearMonth(settings: ComponentSettings) {
     });
 
     firstDayOfPrevMonthX = firstDayOfNextMonthX;
-    i++;
   }
   return svg`<g id="yearMonth">
   ${repeat(

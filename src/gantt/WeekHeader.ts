@@ -1,5 +1,5 @@
 import { svg } from "lit";
-import { addDays, MsInDAY, getWeekNumber, getWeeks } from "../utils";
+import { addDays, getWeekNumber, getWeeks } from "../utils";
 import { YearMonth } from "./YearMonth";
 import { repeat } from "lit/directives/repeat.js";
 import { ComponentSettings } from "../types";
@@ -8,14 +8,12 @@ export function WeekHeader(settings: ComponentSettings) {
   const weeks = getWeeks(settings.timeScale.start, settings.timeScale.end);
 
   const ticks = [];
-  const y0 = settings.scaleHeight;
-  const RH = settings.height - y0;
+  //const y0 = settings.scaleHeight;
+  //const RH = settings.height - y0;
   const d = settings.timeScale.pxPerDay;
   const len = weeks.length - 1;
 
   const oneFourthScaleH = settings.scaleHeight / 4;
-  const lineY = oneFourthScaleH * 3;
-  const lineH = oneFourthScaleH;
 
   for (let i = 0; i < len; i++) {
     const cur = new Date(weeks[i]);
@@ -32,17 +30,21 @@ export function WeekHeader(settings: ComponentSettings) {
     ticks.push({
       id,
       tpl: svg`
-      <g id=${id}>
-        <rect x=${x - d * 2} y=${y0} width=${d * 2} height=${RH} 
-          class="weekend"/>
+      <g id=${id}> 
           <text x=${x - 3} y=${textOffsetY} class="text small end">
           ${prevDay}
         </text>       
-        <rect x=${x} width="1" y=${lineY} height=${lineH}         
-          class="line scale"/>
+
+        <line
+          x1=${x}
+          x2=${x}
+          y1=${settings.scaleHeight / 2}
+          y2=${settings.scaleHeight}
+          class="line"       
+        />    
         <text x=${x + 3} y=${textOffsetY} class="text small start">
           ${curDay}
-        </text>        
+        </text>          
         <text x=${x + 3 * d} y=${weekTextOffsetY} 
           class="text tiny start">
             Week ${weekNumber}
@@ -53,7 +55,14 @@ export function WeekHeader(settings: ComponentSettings) {
   return svg`
     <g id="weekHeader">
       ${YearMonth({ ...settings })}
-
+      <line
+        x1=${0}
+        x2=${settings.width}
+        y1=${settings.scaleHeight / 2}
+        y2=${settings.scaleHeight / 2}
+        class="line"
+        
+      />
       ${repeat(
         ticks,
         (i) => i.id,

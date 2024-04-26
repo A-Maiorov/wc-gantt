@@ -49,10 +49,11 @@ function renderMilestone(
 }
 
 export function Bar(this: WCGantt, settings: ComponentSettings) {
-  const y0 =
-    (settings.rowHeight - settings.barHeight) / 2 + settings.scaleHeight;
+  const y0 = (settings.rowHeight - settings.barHeight) / 2;
 
-  const current = settings.timeScale.dateToPx(new Date()); // x0 + (current - settings.minTime) / settings.unitMs;
+  const current = settings.timeScale.dateToPx(
+    new Date(new Date().setHours(1, 0, 0, 0))
+  ); // x0 + (current - settings.minTime) / settings.unitMs;
 
   const scale = settings.timeScale;
 
@@ -67,8 +68,13 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
       this.dispatchEvent(ev);
     };
     const x = scale.dateToPx(v.start);
-    const y = y0 + i * settings.rowHeight;
-    const cy = settings.barHeight / 2; //y + barHeight / 2;
+
+    let y = y0 + i * settings.rowHeight;
+    const grHeight = settings.barHeight / 3;
+    if (v.type === "group")
+      y = (settings.rowHeight - grHeight) / 2 + i * settings.rowHeight; //y +=  grHeight / 2;
+
+    const cy = settings.barHeight / 2 + 1; //y + barHeight / 2;
     if (v.type === "milestone") {
       return renderMilestone(x, y, settings.barHeight, handler, id, v);
     }
@@ -77,10 +83,6 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
     const w2 = w1 * v.percent;
     let barCss = "gantt-bar";
     barCss += v.type === "group" ? " group" : "";
-
-    // if(v.type === "group"){
-
-    // }
 
     let warning = false;
     let danger = false;
@@ -97,14 +99,29 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
 
     const controlRadius = settings.rowHeight / 6; // 6;
     const controlGap = settings.rowHeight / 6; // 6;
+
     const controlBorder = 1;
     const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
 
+    const barBorder = svg`
+    <rect
+      x=${controlsOffset}
+      y="1"
+      width=${w1}
+      height=${v.type === "group" ? grHeight : settings.barHeight}
+      rx=${1.8}
+      ry=${1.8}
+      class="bar-border"      
+      @click=${handler}    
+    />
+    `;
+
     const backBar = svg`
       <rect
-        x=${controlsOffset}
+        x=${controlsOffset}        
+        y="1"
         width=${w1}
-        height=${settings.barHeight}
+        height=${v.type === "group" ? grHeight : settings.barHeight}
         rx=${1.8}
         ry=${1.8}
         class="back"      
@@ -115,10 +132,11 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
     const frontBar =
       w2 > 0.000001
         ? svg`
-            <rect
-            x=${controlsOffset}
+          <rect
+            y="1"
+            x=${controlsOffset}            
             width=${w2}
-            height=${settings.barHeight}
+            height=${v.type === "group" ? grHeight : settings.barHeight}
             rx=${1.8}
             ry=${1.8}
             class="front"
@@ -147,11 +165,13 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
         <g class="ctl-resize-start">
           <rect 
             x=${controlsOffset + controlGap}
+            y="1"
             height=${settings.barHeight} 
             width=${settings.barHeight} 
             style="opacity:0"
           />
           <svg 
+            y="1"
             x=${controlsOffset + controlGap}
             height=${settings.barHeight} 
             width=${settings.barHeight} 
@@ -160,10 +180,11 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
           </svg>
           <rect 
             x=${controlsOffset + controlGap - 0.5 + settings.barHeight / 2} 
-            y="2" width="1px" height=${settings.barHeight - 4}/>
+            y="3" width="1px" height=${settings.barHeight - 4}/>
         </g>
         <g class="ctl-resize-end">
           <rect 
+            y="1"
             x=${w1}
             height=${settings.barHeight} 
             width=${settings.barHeight} 
@@ -171,6 +192,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
           />
           <svg 
             x=${w1}
+            y="1"
             height=${settings.barHeight} 
             width=${settings.barHeight} 
             viewBox="0 -960 960 960" >
@@ -178,15 +200,16 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
           </svg>
           <rect 
             x=${w1 - 0.5 + settings.barHeight / 2} 
-            y="2" width="1px" height=${settings.barHeight - 4}/>
+            y="3" width="1px" height=${settings.barHeight - 4}/>
         </g>
       `;
 
     return {
       id,
-      tpl: svg`
+      tpl: svg` 
       <svg 
-        x=${x - controlsOffset} y=${y}              
+        x=${x - controlsOffset} 
+        y=${y - 1}              
         id=${id}
         key=${i}       
         .item=${v}
@@ -194,9 +217,11 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
         class=${barCss}
         ?warning=${warning}
         ?danger=${danger}
-      >      
+      >     
+       
         ${backBar}
         ${frontBar}
+        ${barBorder}
         ${controls}
     
       </svg>
@@ -216,7 +241,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
         <line             
           x1=${current}
           x2=${current}
-          y1=${settings.scaleHeight}
+          y1=${0}
           y2=${settings.height}
           class="today-line"
         />

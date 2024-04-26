@@ -15,6 +15,7 @@ export const layoutCss = css`
     --gantt-layout-tiny-text-fill: #999;
     --gantt-layout-tiny-font-size: 8px;
     --gantt-day-header-weekend-fill: rgba(252, 248, 227, 0.6);
+    --gantt-group-bar-bg-fill: #299cb412;
   }
 
   .box {
@@ -26,16 +27,17 @@ export const layoutCss = css`
     stroke-width: var(--gantt-layout-line-width);
   }
 
-  .line.flip {
+  /* .line.flip {
     transform-box: fill-box;
     transform-origin: center;
     transform: rotate(180deg);
-  }
+  } */
 
-  .line.scale {
-    fill: url(#lineScaleGrad);
+  /* .line.scale {
+    fill: var(--gantt-layout-line-scale-stroke);
+    
     stroke-width: 0;
-  }
+  } */
 
   .text {
     text-anchor: middle;
@@ -65,9 +67,7 @@ export const layoutCss = css`
   }
 
   .labels {
-    margin-top: calc(
-      var(--gantt-layout-time-scale-height) - var(--gantt-layout-line-width) / 2
-    );
+    margin-top: calc(var(--gantt-layout-line-width) / 2);
   }
 
   .lbl {
@@ -81,5 +81,8 @@ export const layoutCss = css`
   }
   .lbl:hover {
     color: #1582dc;
+  }
+  .group-bg-color {
+    fill: var(--gantt-group-bar-bg-fill, §#299cb412);
   }
 `;

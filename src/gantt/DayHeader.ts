@@ -8,21 +8,9 @@ export function DayHeader(settings: ComponentSettings) {
   const currentDay = new Date(scale.startMs);
   const ticks = [];
 
-  const weekendRectH = settings.height - settings.scaleHeight;
-
   for (let day = 0; day <= scale.totalDays - 1; day++) {
-    const dayOfWeek = currentDay.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const x = day * scale.pxPerDay;
     const textX = x + scale.pxPerDay / 2;
-
-    const oneFourthScaleH = settings.scaleHeight / 4;
-    const lineY = oneFourthScaleH * 3;
-    const lineH = oneFourthScaleH;
-
-    const weekendRect = isWeekend
-      ? svg`<rect x=${x} y=${settings.scaleHeight} width=${scale.pxPerDay} height=${weekendRectH} class="weekend" />`
-      : null;
 
     // const lastDayLine =
     //   day === scale.totalDays - 1
@@ -47,11 +35,15 @@ export function DayHeader(settings: ComponentSettings) {
     ticks.push({
       id: day,
       tpl: svg`
-      <g>
-        ${weekendRect}
-        <rect x=${x} y=${lineY} width="1" height=${lineH}
-          class="line scale day"          
-        />
+      <g>             
+        
+        <line
+          x1=${x}
+          x2=${x}
+          y1=${settings.scaleHeight / 2}
+          y2=${settings.scaleHeight}
+          class="line"       
+        />   
         <text 
           id=${day} 
           x=${textX} 
@@ -70,7 +62,14 @@ export function DayHeader(settings: ComponentSettings) {
   return svg`
   <g id="dayHeader">
     ${YearMonth({ ...settings })}
-    
+    <line
+        x1=${0}
+        x2=${settings.width}
+        y1=${settings.scaleHeight / 2}
+        y2=${settings.scaleHeight / 2}
+        class="line"
+        
+      />
     ${repeat(
       ticks,
       (i) => i.id,

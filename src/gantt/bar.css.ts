@@ -18,6 +18,12 @@ export const barCss = css`
   .milestone {
     fill: var(--gantt-milestone-color, #d33daf);
   }
+
+  .bar-border {
+    stroke: var(--gantt-chart-bg-color);
+    stroke-width: 1px;
+    fill: transparent;
+  }
   .gantt-bar .back {
     fill: var(--gantt-bar-back-fill, #65c16f);
   }
@@ -36,6 +42,7 @@ export const barCss = css`
   .gantt-bar.group .front {
     fill: var(--gantt-bar-group-front-fill, #299cb4);
   }
+
   .today-line {
     stroke: var(--gantt-bar-today-line-stroke, #f04134);
     stroke-width: var(--gantt-bar-today-line-stroke-width, 1px);

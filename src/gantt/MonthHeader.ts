@@ -31,10 +31,6 @@ export function MonthHeader(settings: ComponentSettings) {
   const ticks = [];
   const len = months.length - 1;
 
-  const oneFourthScaleH = settings.scaleHeight / 4;
-  const lineY = oneFourthScaleH * 3;
-  const lineH = oneFourthScaleH;
-
   for (let i = 0; i < len; i++) {
     const cur = new Date(months[i]);
     const month = cur.getMonth();
@@ -44,12 +40,15 @@ export function MonthHeader(settings: ComponentSettings) {
     const textX = x + t / 2;
 
     const line = svg`
-      <rect 
-        x=${x}         
-        y=${lineY} 
-        width="1"
-        height=${lineH}       
-        class="line scale" />`;
+    
+      <line
+        x1=${x}
+        x2=${x}
+        y1=${settings.scaleHeight / 2}
+        y2=${settings.scaleHeight}
+        class="line"       
+      />    
+      `;
 
     ticks.push({
       id,
@@ -73,6 +72,14 @@ export function MonthHeader(settings: ComponentSettings) {
   return svg`
     <g id="monthHeader">
       ${Year(years, settings)}     
+      <line
+        x1=${0}
+        x2=${settings.width}
+        y1=${settings.scaleHeight / 2}
+        y2=${settings.scaleHeight / 2}
+        class="line"
+        
+      />
        ${repeat(
          ticks,
          (i) => i.id,

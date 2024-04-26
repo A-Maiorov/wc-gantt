@@ -2,7 +2,6 @@ import { TemplateResult, render, svg } from "lit";
 import { ComponentSettings, Item, Link, LinkType } from "../types";
 import { p2s } from "../utils";
 import { createRoundedPathString } from "../roundedCorners";
-import { WCGantt } from "../WcGantt";
 
 let _settings: ComponentSettings;
 
@@ -85,13 +84,13 @@ function renderLink(
   if (!targetItem || !targetItem.start || !targetItem.end) return null;
   if (!sourceItem || !sourceItem.start || !sourceItem.end) return null;
 
-  const y0 = settings.rowHeight / 2 + settings.scaleHeight;
+  const y0 = settings.rowHeight / 2;
 
   const i = settings.data.findIndex((x) => x.id === sourceItem.id);
   const j = settings.data.findIndex((x) => x.id === targetItem.id);
 
   const gap = 12;
-  const arrow = 6;
+  const arrow = 3;
   const mgap = targetItem.type === "milestone" ? settings.barHeight / 2 : 0;
   const y1 = y0 + i * settings.rowHeight;
   const y2 = y0 + j * settings.rowHeight;

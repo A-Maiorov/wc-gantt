@@ -24,8 +24,14 @@ export function Year(years: number[], settings: ComponentSettings) {
       id: "y_" + currYear,
       tpl: svg`
       <g>
-        <rect x=${currX2} y=${y} width="1" height=${h}
-        class="line scale flip" />      
+      
+        <line
+          x1=${currX2}
+          x2=${currX2}
+          y1=${y}
+          y2=${h}
+          class="line"       
+        />   
           <text 
             x=${(currX2 - currX1) / 2 + currX1} 
             y=${settings.scaleHeight * 0.25} 

@@ -138,4 +138,4 @@ const data = [
   },
 ];
 
-window.data = data;
+window.data = [...data, ...data, ...data];

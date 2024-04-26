@@ -33,7 +33,7 @@ export const isMilestone = (i: Item): i is Milestone => {
   const res =
     "type" in i &&
     i.nested == undefined &&
-    !("percent" in i) &&
+    i.percent == undefined &&
     i.type === "milestone";
   if (res) i.end = i.start;
 
@@ -98,6 +98,7 @@ export interface WcGanttOptions {
 }
 
 export interface ComponentSettings extends WcGanttOptions {
+  labelsWidth: number;
   start: Date;
   end: Date;
   data: FlattenedItem[];
@@ -106,6 +107,7 @@ export interface ComponentSettings extends WcGanttOptions {
   scaleHeight: number; // default: 60,
   rowHeight: number; // default: 40,
   barHeight: number; // default: 16,
+  lineWidth: number; // default: 1
   timeScale: TimeScale;
 }
 

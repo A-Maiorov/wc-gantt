@@ -23,29 +23,50 @@ export function Gantt(this: WCGantt) {
       width=${this.settings.width} 
       height=${this.settings.height} 
       viewBox=${box}>
+    
+     
+
+      ${Grid.bind(this)(this.settings)}           
+      ${linkLines}
+      ${Bar.bind(this)(this.settings)}     
+     
+    </svg>
+  `;
+}
+// <defs>
+// <linearGradient id="lineScaleGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+//   <stop offset="0%" stop-color="var(--gantt-layout-line-scale-stroke)"/>
+//   <stop offset="100%" stop-color="var(--gantt-chart-bg-color)"/>
+// </linearGradient>
+// </defs>
+export function getHeader(this: WCGantt, settings: ComponentSettings) {
+  let res;
+  switch (settings.viewMode) {
+    case "day":
+      res = DayHeader.bind(this)(settings);
+      break;
+    case "month":
+      res = MonthHeader.bind(this)(settings);
+      break;
+    case "week":
+      res = WeekHeader.bind(this)(settings);
+      break;
+  }
+
+  const box = `0 0 ${this.settings.width} ${this.settings.scaleHeight}`;
+
+  return svg`
+   <svg id="gantt" 
+      width=${this.settings.width} 
+      height=${this.settings.scaleHeight} 
+      viewBox=${box}>
       <defs>
         <linearGradient id="lineScaleGrad" x1="0%" y1="100%" x2="0%" y2="0%">
           <stop offset="0%" stop-color="var(--gantt-layout-line-scale-stroke)"/>              
           <stop offset="100%" stop-color="var(--gantt-chart-bg-color)"/>
         </linearGradient>       
       </defs>
-          
-      ${Grid.bind(this)(this.settings)}       
-  
-      ${getHeader.bind(this)(this.settings)}
-      ${linkLines}
-      ${Bar.bind(this)(this.settings)}     
+      ${res}
     </svg>
-  `;
-}
-
-function getHeader(this: HTMLElement, settings: ComponentSettings) {
-  switch (settings.viewMode) {
-    case "day":
-      return DayHeader.bind(this)(settings);
-    case "month":
-      return MonthHeader.bind(this)(settings);
-    case "week":
-      return WeekHeader.bind(this)(settings);
-  }
+    `;
 }

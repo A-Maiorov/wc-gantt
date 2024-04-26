@@ -4,7 +4,7 @@ import { repeat } from "lit/directives/repeat.js";
 
 export function Labels(
   this: HTMLElement,
-  { data, rowHeight, scaleHeight: offsetY }: ComponentSettings
+  { data, rowHeight }: ComponentSettings
 ) {
   const handler = (v: Item) => {
     const ev = new CustomEvent<Item>("item-click", { detail: v });
@@ -16,7 +16,7 @@ export function Labels(
       <text
         key=${i}
         x="10"
-        y=${(i + 0.5) * rowHeight + offsetY}
+        y=${(i + 0.5) * rowHeight}
         class="gantt-label text start"        
         @click=${() => handler(v)}
       >
