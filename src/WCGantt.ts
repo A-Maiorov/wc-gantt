@@ -80,13 +80,24 @@ export class WCGantt extends LitElement {
       }
 
       .labels-container {
-        box-shadow: 6px 0 5px -4px #88888878;
+        box-shadow: 1px 0px 6px 1px #88888878;
+        clip-path: inset(0px -20px 0px 0px);
+
         height: fit-content;
         box-sizing: border-box;
         z-index: 1;
         margin: 0;
         padding: 0;
         margin-top: calc(var(--gantt-layout-line-width) / 2);
+      }
+      .time-scale-container {
+        display: flex;
+      }
+      .time-scale-margin {
+        box-shadow: 1px 0px 6px 1px #88888878;
+        clip-path: inset(0px -20px 0px 0px);
+        flex-shrink: 0;
+        z-index: 1;
       }
     `,
     layoutCss,
@@ -239,6 +250,15 @@ export class WCGantt extends LitElement {
     return this.__timeScaleEl;
   }
 
+  private __timeScaleMarginEl: HTMLDivElement;
+  get timeScaleMarginElement() {
+    if (!this.__timeScaleMarginEl)
+      this.__timeScaleMarginEl =
+        this.renderRoot.querySelector<HTMLDivElement>(".time-scale-margin");
+
+    return this.__timeScaleMarginEl;
+  }
+
   private __ganttEl: HTMLDivElement;
   get ganttElement() {
     if (!this.__ganttEl)
@@ -252,7 +272,7 @@ export class WCGantt extends LitElement {
   protected updated() {
     if (!this.data || this.data.length === 0 || this.scrollReady) return;
     const el = this.renderRoot
-      .querySelector("slot")
+      .querySelector<HTMLSlotElement>("slot[data-labels]")
       .assignedElements({ flatten: true })[0];
     if (!el) return;
 
@@ -264,10 +284,13 @@ export class WCGantt extends LitElement {
     };
 
     const getLabelsWidth = () => {
-      const w = (el as HTMLElement).clientWidth ?? 0;
+      const r = (el as HTMLElement).getBoundingClientRect();
+
+      const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
       this.settings.labelsWidth = w;
-      this.timeScaleElement.style.marginLeft = w + "px";
+      this.timeScaleMarginElement.style.width = w + "px";
       const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
+
       this.timeScaleElement.style.marginRight =
         ganttV.offsetWidth - ganttV.clientWidth + "px";
       this.requestUpdate();
@@ -295,12 +318,18 @@ export class WCGantt extends LitElement {
       : html``;
 
     return html`
-      <div class="time-scale" @scroll=${this.onScroll}>
-        ${getHeader.bind(this)(this.settings)}
+      <div class="time-scale-container">
+        <div class="time-scale-margin">
+          <slot name="top-left-corner"></slot>
+        </div>
+        <div class="time-scale" @scroll=${this.onScroll}>
+          ${getHeader.bind(this)(this.settings)}
+        </div>
       </div>
+
       <div class="gantt-v">
         <div class="labels-container">
-          <slot>${labels}</slot>
+          <slot data-labels>${labels}</slot>
         </div>
         <div class="gantt" @scroll=${this.onScroll}>${Gantt.bind(this)()}</div>
       </div>
@@ -309,10 +338,14 @@ export class WCGantt extends LitElement {
 
   onScroll(e: Event) {
     if (e.target === this.ganttElement) {
-      this.timeScaleElement.scroll({ left: this.ganttElement.scrollLeft });
+      this.timeScaleElement.scroll({
+        left: this.ganttElement.scrollLeft,
+      });
     }
     if (e.target === this.timeScaleElement) {
-      this.ganttElement.scroll({ left: this.timeScaleElement.scrollLeft });
+      this.ganttElement.scroll({
+        left: this.timeScaleElement.scrollLeft,
+      });
     }
   }
 }
