@@ -1,5 +1,6 @@
 import { type FlattenedItem, type WCGantt } from "./WcGantt";
-import type { TimeScale } from "./timeScale";
+//import { getControlGap } from "./gantt/Bar";
+//import type { TimeScale } from "./timeScale";
 
 import {
   Item,
@@ -8,17 +9,10 @@ import {
 import { MsInDAY } from "./utils";
 
 let svg: SVGElement = undefined;
-let timeScale: TimeScale = undefined;
-
-export const resizeItem = (
-  itm: Item,
-  diffMs: number,
-  resizeStart: boolean,
-  clientX?: number
-) => {
+// let timeScale: TimeScale = undefined;
+// let controlGap: number = 0;
+export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
   if (!svg) return;
-
-  const rect = svg.getBoundingClientRect();
 
   if (resizeStart) {
     let newStart = new Date(itm.start.getTime() + diffMs);
@@ -29,27 +23,11 @@ export const resizeItem = (
         newStart = new Date(itm.start.getTime() + diffMs);
       }
 
-      const mouseMs = clientX
-        ? timeScale.pxToDate(clientX - rect.left).getTime()
-        : itm.start.getTime();
-
-      if (itm.start.getTime() > mouseMs) {
-        return false;
-      }
-
-      // // moving start right = shrink item
-      // if (itm.end.getTime() - newStart.getTime() < MsInDAY)
-      //   itm.end = new Date(itm.end.getTime() + diffMs);
+      // moving start right = shrink item
     } else {
       if (diffMs > MsInDAY * -1) {
         diffMs = MsInDAY * -1;
         newStart = new Date(itm.start.getTime() + diffMs);
-      }
-      const mouseMs = clientX
-        ? timeScale.pxToDate(clientX - rect.left).getTime()
-        : itm.start.getTime();
-      if (itm.start.getTime() < mouseMs) {
-        return false;
       }
     }
 
@@ -62,33 +40,23 @@ export const resizeItem = (
         diffMs = MsInDAY * -1;
         newEnd = new Date(itm.end.getTime() + diffMs);
       }
-      const mouseMs = clientX
-        ? timeScale.pxToDate(clientX - rect.left).getTime()
-        : itm.end.getTime();
-      if (itm.end.getTime() < mouseMs) return false;
 
       // // moving end left = shrink item
-      // if (newEnd.getTime() - itm.start.getTime() < MsInDAY)
-      //   itm.start = new Date(itm.start.getTime() + diffMs);
     } else {
       if (diffMs < MsInDAY) {
         diffMs = MsInDAY;
         newEnd = new Date(itm.end.getTime() + diffMs);
       }
-      const mouseMs = clientX
-        ? timeScale.pxToDate(clientX - rect.left).getTime()
-        : itm.end.getTime();
-      if (itm.end.getTime() > mouseMs) return false;
     }
     itm.end = newEnd;
   }
-  return true;
 };
 export function configureResizeItem(this: WCGantt) {
   svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
-  timeScale = this.settings.timeScale;
+  // timeScale = this.settings.timeScale;
   let moving = false;
   let movingStarted = false;
+  //controlGap = getControlGap(this.settings) * 2;
   // let initialBarSvgX = 0;
   let barSvg: SVGSVGElement = undefined;
   //let rectSvg: SVGRectElement = undefined;
@@ -97,6 +65,7 @@ export function configureResizeItem(this: WCGantt) {
   let item: FlattenedItem;
   let resizeStart = false;
   let resizeEnd = false;
+  let initialX: number = undefined;
 
   function isResizeControl(e: MouseEvent) {
     const p = e.composedPath();
@@ -121,6 +90,7 @@ export function configureResizeItem(this: WCGantt) {
     resizeEnd = false;
     moving = false;
     barSvg = undefined;
+    initialX = undefined;
     // initialBarSvgX = 0;
     // rectSvg = undefined;
     item = undefined;
@@ -139,6 +109,7 @@ export function configureResizeItem(this: WCGantt) {
     //e.composedPath()
     if (!isResizeControl(e) || moving) return;
     movingStarted = true;
+    initialX = e.clientX;
     //  rectSvg = target;
     barSvg = e
       .composedPath()
@@ -162,18 +133,25 @@ export function configureResizeItem(this: WCGantt) {
     cancelEvent(e);
     moving = true;
 
-    const diff = e.movementX * this.settings.timeScale.msPerPx;
+    const dir = e.movementX > 0 ? 1 : -1;
+
+    const diff =
+      Math.abs(initialX - e.clientX) * this.settings.timeScale.msPerPx * dir;
+
     if (diff === 0) return;
 
-    const success = resizeItem(item, diff, resizeStart, e.clientX);
-    if (success) {
-      for (const itm of item.parents) {
-        if (resizeStart && item.start.getTime() === itm.start.getTime())
-          resizeItem(itm, diff, resizeStart, e.clientX);
-        if (resizeEnd && item.end.getTime() === itm.end.getTime())
-          resizeItem(itm, diff, resizeStart, e.clientX);
-      }
+    if (Math.abs(diff) < MsInDAY) return;
+
+    resizeItem(item, diff, resizeStart);
+
+    for (const itm of item.parents) {
+      if (resizeStart && item.start.getTime() === itm.start.getTime())
+        resizeItem(itm, diff, resizeStart);
+      if (resizeEnd && item.end.getTime() === itm.end.getTime())
+        resizeItem(itm, diff, resizeStart);
     }
+
+    initialX = e.clientX;
 
     this.requestUpdate();
   };
@@ -199,7 +177,7 @@ export function configureResizeItem(this: WCGantt) {
 
   svg.addEventListener("mouseup", onMouseUp);
 
-  this.addEventListener("mouseout", (e) => {
+  this.addEventListener("mouseout", () => {
     resetMovement();
     // console.log(e);
   });

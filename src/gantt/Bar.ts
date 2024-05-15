@@ -47,6 +47,9 @@ function renderMilestone(
   `,
   };
 }
+export function getControlGap(settings: ComponentSettings) {
+  return settings.rowHeight / 6; // 6;
+}
 
 export function Bar(this: WCGantt, settings: ComponentSettings) {
   const y0 = (settings.rowHeight - settings.barHeight) / 2;
@@ -98,7 +101,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
     }
 
     const controlRadius = settings.rowHeight / 6; // 6;
-    const controlGap = settings.rowHeight / 6; // 6;
+    const controlGap = getControlGap(settings); // 6;
 
     const controlBorder = 1;
     const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;

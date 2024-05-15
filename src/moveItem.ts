@@ -70,9 +70,9 @@ export function configureMoveItem(this: WCGantt) {
     cancelEvent(e);
     moving = true;
 
-    if (Math.abs(initialX - e.clientX) < pxPerDay) return;
-
     const dir = e.movementX > 0 ? 1 : -1;
+
+    if (Math.abs(initialX - e.clientX) < pxPerDay) return;
 
     if (isGroup(item)) {
       for (const itm of item.nested) {
@@ -116,7 +116,7 @@ export function configureMoveItem(this: WCGantt) {
 
   svg.addEventListener("mouseup", onMouseUp);
 
-  this.addEventListener("mouseout", (e) => {
+  this.addEventListener("mouseout", () => {
     resetMovement();
     // console.log(e);
   });
