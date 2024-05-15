@@ -56,7 +56,7 @@ export function getHeader(this: WCGantt, settings: ComponentSettings) {
   const box = `0 0 ${this.settings.width} ${this.settings.scaleHeight}`;
 
   return svg`
-   <svg id="gantt" 
+   <svg id="gantt-h" 
       width=${this.settings.width} 
       height=${this.settings.scaleHeight} 
       viewBox=${box}>

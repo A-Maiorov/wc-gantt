@@ -2,14 +2,15 @@ import { type FlattenedItem, type WCGantt } from "./WcGantt";
 import { resizeItem } from "./resizeItem";
 
 import { Item, isGroup } from "./types";
+import { MsInDAY } from "./utils";
 
 export function configureMoveItem(this: WCGantt) {
   const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
   let moving = false;
   let movingStarted = false;
-  let initialBarSvgX = 0;
+  let initialX: number = undefined;
+
   let barSvg: SVGSVGElement = undefined;
-  let rectSvg: SVGRectElement = undefined;
 
   let itemId: string | number | undefined;
   let item: FlattenedItem;
@@ -18,17 +19,18 @@ export function configureMoveItem(this: WCGantt) {
     const e = el as SVGElement;
     return (
       e.tagName === "rect" &&
-      (e.classList.contains("back") || e.classList.contains("front"))
+      (e.classList.contains("back") ||
+        e.classList.contains("front") ||
+        e.classList.contains("bar-border"))
     );
   }
 
   const resetMovement = () => {
     moving = false;
     barSvg = undefined;
-    initialBarSvgX = 0;
-    rectSvg = undefined;
     item = undefined;
     movingStarted = false;
+    initialX = undefined;
 
     this.suppressClick;
   };
@@ -40,43 +42,56 @@ export function configureMoveItem(this: WCGantt) {
   };
 
   const onMouseDown = (e: MouseEvent) => {
+    //const rect = svg.getBoundingClientRect();
+    // const mouseMs = this.settings.timeScale.pxToDate(e.clientX - rect.left);
+
     const target = e.target;
     if (!isBarRect(target) || moving) return;
+
+    initialX = e.clientX;
+
     movingStarted = true;
-    rectSvg = target;
+
     barSvg = target.parentElement as unknown as SVGSVGElement;
 
     itemId = barSvg.dataset.itemId;
     if (!itemId) return;
     cancelEvent(e);
 
-    initialBarSvgX = barSvg.x.baseVal.value;
-
     item = this.settings.data.find((x) => x.id.toString() === itemId);
   };
 
+  const pxPerDay = this.settings.timeScale.pxPerDay;
   const onMouseMove = async (e: MouseEvent) => {
-    if (!movingStarted) return;
+    if (movingStarted === false || initialX === undefined) {
+      return;
+    }
+
     cancelEvent(e);
     moving = true;
-    const diff = e.movementX * this.settings.timeScale.msPerPx;
+
+    if (Math.abs(initialX - e.clientX) < pxPerDay) return;
+
+    const dir = e.movementX > 0 ? 1 : -1;
 
     if (isGroup(item)) {
       for (const itm of item.nested) {
-        itm.start = new Date(itm.start.getTime() + diff);
-        itm.end = new Date(itm.end.getTime() + diff);
+        itm.start = new Date(itm.start.getTime() + MsInDAY * dir);
+        itm.end = new Date(itm.end.getTime() + MsInDAY * dir);
       }
     }
 
     for (const itm of item.parents) {
       if (item.start.getTime() === itm.start.getTime())
-        resizeItem(itm, diff, true);
+        resizeItem(itm, MsInDAY * dir, true);
       else if (item.end.getTime() === itm.end.getTime())
-        resizeItem(itm, diff, false);
+        resizeItem(itm, MsInDAY * dir, false);
     }
 
-    item.start = new Date(item.start.getTime() + diff);
-    item.end = new Date(item.end.getTime() + diff);
+    item.start = new Date(item.start.getTime() + MsInDAY * dir);
+    item.end = new Date(item.end.getTime() + MsInDAY * dir);
+
+    initialX += pxPerDay * dir;
     this.requestUpdate();
   };
 

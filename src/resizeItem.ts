@@ -1,32 +1,95 @@
 import { type FlattenedItem, type WCGantt } from "./WcGantt";
+import type { TimeScale } from "./timeScale";
 
-import { Item, isGroup } from "./types";
+import {
+  Item,
+  //  isGroup
+} from "./types";
 import { MsInDAY } from "./utils";
 
-export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
+let svg: SVGElement = undefined;
+let timeScale: TimeScale = undefined;
+
+export const resizeItem = (
+  itm: Item,
+  diffMs: number,
+  resizeStart: boolean,
+  clientX?: number
+) => {
+  if (!svg) return;
+
+  const rect = svg.getBoundingClientRect();
+
   if (resizeStart) {
-    const newStart = new Date(itm.start.getTime() + diffMs);
+    let newStart = new Date(itm.start.getTime() + diffMs);
+
     if (diffMs > 0) {
-      // moving start right = shrink item
-      if (itm.end.getTime() - newStart.getTime() < MsInDAY)
-        itm.end = new Date(itm.end.getTime() + diffMs);
+      if (diffMs < MsInDAY) {
+        diffMs = MsInDAY;
+        newStart = new Date(itm.start.getTime() + diffMs);
+      }
+
+      const mouseMs = clientX
+        ? timeScale.pxToDate(clientX - rect.left).getTime()
+        : itm.start.getTime();
+
+      if (itm.start.getTime() > mouseMs) {
+        return false;
+      }
+
+      // // moving start right = shrink item
+      // if (itm.end.getTime() - newStart.getTime() < MsInDAY)
+      //   itm.end = new Date(itm.end.getTime() + diffMs);
+    } else {
+      if (diffMs > MsInDAY * -1) {
+        diffMs = MsInDAY * -1;
+        newStart = new Date(itm.start.getTime() + diffMs);
+      }
+      const mouseMs = clientX
+        ? timeScale.pxToDate(clientX - rect.left).getTime()
+        : itm.start.getTime();
+      if (itm.start.getTime() < mouseMs) {
+        return false;
+      }
     }
+
     itm.start = newStart;
   } else {
-    const newEnd = new Date(itm.end.getTime() + diffMs);
+    let newEnd = new Date(itm.end.getTime() + diffMs);
+
     if (diffMs < 0) {
-      // moving end left = shrink item
-      if (newEnd.getTime() - itm.start.getTime() < MsInDAY)
-        itm.start = new Date(itm.start.getTime() + diffMs);
+      if (diffMs > MsInDAY * -1) {
+        diffMs = MsInDAY * -1;
+        newEnd = new Date(itm.end.getTime() + diffMs);
+      }
+      const mouseMs = clientX
+        ? timeScale.pxToDate(clientX - rect.left).getTime()
+        : itm.end.getTime();
+      if (itm.end.getTime() < mouseMs) return false;
+
+      // // moving end left = shrink item
+      // if (newEnd.getTime() - itm.start.getTime() < MsInDAY)
+      //   itm.start = new Date(itm.start.getTime() + diffMs);
+    } else {
+      if (diffMs < MsInDAY) {
+        diffMs = MsInDAY;
+        newEnd = new Date(itm.end.getTime() + diffMs);
+      }
+      const mouseMs = clientX
+        ? timeScale.pxToDate(clientX - rect.left).getTime()
+        : itm.end.getTime();
+      if (itm.end.getTime() > mouseMs) return false;
     }
     itm.end = newEnd;
   }
+  return true;
 };
 export function configureResizeItem(this: WCGantt) {
-  const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
+  svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
+  timeScale = this.settings.timeScale;
   let moving = false;
   let movingStarted = false;
-  let initialBarSvgX = 0;
+  // let initialBarSvgX = 0;
   let barSvg: SVGSVGElement = undefined;
   //let rectSvg: SVGRectElement = undefined;
 
@@ -35,11 +98,22 @@ export function configureResizeItem(this: WCGantt) {
   let resizeStart = false;
   let resizeEnd = false;
 
-  function isResizeControl(el: unknown): el is SVGGElement {
-    const e = (el as SVGElement).parentElement;
-    resizeStart = e.classList.contains("ctl-resize-start");
-    resizeEnd = e.classList.contains("ctl-resize-end");
-    return e.tagName === "g" && (resizeStart || resizeEnd);
+  function isResizeControl(e: MouseEvent) {
+    const p = e.composedPath();
+    let _resizeStart = false;
+    let _resizeEnd = false;
+    for (const x of p) {
+      _resizeStart = (x as Element).classList?.contains("ctl-resize-start");
+      _resizeEnd = (x as Element).classList?.contains("ctl-resize-end");
+      if (_resizeStart || _resizeEnd) break;
+    }
+
+    if (_resizeStart || _resizeEnd) {
+      resizeStart = _resizeStart;
+      resizeEnd = _resizeEnd;
+      return true;
+    }
+    return false;
   }
 
   const resetMovement = () => {
@@ -47,7 +121,7 @@ export function configureResizeItem(this: WCGantt) {
     resizeEnd = false;
     moving = false;
     barSvg = undefined;
-    initialBarSvgX = 0;
+    // initialBarSvgX = 0;
     // rectSvg = undefined;
     item = undefined;
     movingStarted = false;
@@ -62,11 +136,15 @@ export function configureResizeItem(this: WCGantt) {
   };
 
   const onMouseDown = (e: MouseEvent) => {
-    const target = e.target;
-    if (!isResizeControl(target) || moving) return;
+    //e.composedPath()
+    if (!isResizeControl(e) || moving) return;
     movingStarted = true;
     //  rectSvg = target;
-    barSvg = target.parentElement.parentElement as unknown as SVGSVGElement;
+    barSvg = e
+      .composedPath()
+      .find((x) =>
+        (x as Element).classList.contains("gantt-bar")
+      ) as SVGSVGElement;
 
     itemId = barSvg.dataset.itemId;
 
@@ -74,7 +152,7 @@ export function configureResizeItem(this: WCGantt) {
 
     cancelEvent(e);
 
-    initialBarSvgX = barSvg.x.baseVal.value;
+    // initialBarSvgX = barSvg.x.baseVal.value;
 
     item = this.settings.data.find((x) => x.id.toString() === itemId);
   };
@@ -83,19 +161,19 @@ export function configureResizeItem(this: WCGantt) {
     if (!movingStarted) return;
     cancelEvent(e);
     moving = true;
-    const diff = e.movementX * this.settings.timeScale.msPerPx;
 
-    // if (isGroup(item)) {
-    for (const itm of item.parents) {
-      if (resizeStart && item.start.getTime() === itm.start.getTime())
-        resizeItem(itm, diff, resizeStart);
-      if (resizeEnd && item.end.getTime() === itm.end.getTime())
-        resizeItem(itm, diff, resizeStart);
+    const diff = e.movementX * this.settings.timeScale.msPerPx;
+    if (diff === 0) return;
+
+    const success = resizeItem(item, diff, resizeStart, e.clientX);
+    if (success) {
+      for (const itm of item.parents) {
+        if (resizeStart && item.start.getTime() === itm.start.getTime())
+          resizeItem(itm, diff, resizeStart, e.clientX);
+        if (resizeEnd && item.end.getTime() === itm.end.getTime())
+          resizeItem(itm, diff, resizeStart, e.clientX);
+      }
     }
-    // }
-    resizeItem(item, diff, resizeStart);
-    // if (resizeStart) item.start = new Date(item.start.getTime() + diff);
-    // else item.end = new Date(item.end.getTime() + diff);
 
     this.requestUpdate();
   };
