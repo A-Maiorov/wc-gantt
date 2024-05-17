@@ -329,7 +329,7 @@ export class WCGantt extends LitElement {
 
       <div class="gantt-v">
         <div class="labels-container">
-          <slot data-labels>${labels}</slot>
+          <slot name="labels" data-labels>${labels}</slot>
         </div>
         <div class="gantt" @scroll=${this.onScroll}>${Gantt.bind(this)()}</div>
       </div>

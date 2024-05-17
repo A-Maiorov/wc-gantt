@@ -10,6 +10,7 @@ export const barCss = css`
     --gantt-bar-group-front-fill: #299cb4;
     --gantt-bar-today-line-stroke: #f04134;
     --gantt-bar-today-line-stroke-width: 1px;
+    --gantt-bar-border-color: var(--gantt-chart-bg-color);
   }
 
   .gantt-bar {
@@ -20,7 +21,7 @@ export const barCss = css`
   }
 
   .bar-border {
-    stroke: var(--gantt-chart-bg-color);
+    stroke: var(--gantt-bar-border-color);
     stroke-width: 1px;
     fill: transparent;
   }

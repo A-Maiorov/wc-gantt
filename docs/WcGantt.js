@@ -431,6 +431,7 @@ var Ce=Object.defineProperty;var Me=Object.getOwnPropertyDescriptor;var nt=(n,t,
     --gantt-bar-group-front-fill: #299cb4;
     --gantt-bar-today-line-stroke: #f04134;
     --gantt-bar-today-line-stroke-width: 1px;
+    --gantt-bar-border-color: var(--gantt-chart-bg-color);
   }
 
   .gantt-bar {
@@ -441,7 +442,7 @@ var Ce=Object.defineProperty;var Me=Object.getOwnPropertyDescriptor;var nt=(n,t,
   }
 
   .bar-border {
-    stroke: var(--gantt-chart-bg-color);
+    stroke: var(--gantt-bar-border-color);
     stroke-width: 1px;
     fill: transparent;
   }
@@ -570,7 +571,7 @@ var Ce=Object.defineProperty;var Me=Object.getOwnPropertyDescriptor;var nt=(n,t,
 
       <div class="gantt-v">
         <div class="labels-container">
-          <slot data-labels>${e}</slot>
+          <slot name="labels" data-labels>${e}</slot>
         </div>
         <div class="gantt" @scroll=${this.onScroll}>${$e.bind(this)()}</div>
       </div>
