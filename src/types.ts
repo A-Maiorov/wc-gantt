@@ -5,6 +5,7 @@ export interface Link {
   source: string | number;
   target: string | number;
   type: LinkType;
+  lag: number;
 }
 
 export type LinkType = "FS" | "FF" | "SS" | "SF";
@@ -18,7 +19,6 @@ export interface Item {
   start?: Date;
   end?: Date;
   percent?: number;
-  links?: Array<Link>;
 }
 export const isActivity = (i: Item): i is Activity => {
   const res = i.nested == undefined && (!i.type || i.type === "activity");
@@ -93,6 +93,7 @@ export interface WcGanttOptions {
   showLinks: boolean;
   showLabels: boolean;
   showDelay: boolean;
+  showCriticalPath: boolean;
   minDate?: Date;
   maxDate?: Date;
 }
@@ -102,6 +103,7 @@ export interface ComponentSettings extends WcGanttOptions {
   start: Date;
   end: Date;
   data: FlattenedItem[];
+  links: Link[];
   width: number;
   height: number;
   scaleHeight: number; // default: 60,

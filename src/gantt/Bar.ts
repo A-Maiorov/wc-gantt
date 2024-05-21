@@ -62,6 +62,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
 
   const bars = settings.data.map((v, i) => {
     const id = "bar_" + v.id;
+
     if (!v.start || !v.end) return null;
 
     const handler = () => {
@@ -106,6 +107,10 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
     const controlBorder = 1;
     const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
 
+    const borderCssClass = v.crit
+      ? "bar-inner-border crit"
+      : "bar-inner-border";
+
     const barBorder = svg`
     <rect
       x=${controlsOffset}
@@ -114,7 +119,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
       height=${v.type === "group" ? grHeight : settings.barHeight}
       rx=${1.8}
       ry=${1.8}
-      class="bar-border"      
+      class=${borderCssClass}
       @click=${handler}    
     />
     `;

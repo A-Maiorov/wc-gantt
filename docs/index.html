@@ -50,12 +50,14 @@
   <script>
     function ready() {
 
-      const opts = {
-        viewMode: "week"
+      window.opts = {
+        viewMode: "week",
+        showCriticalPath: true
       };
 
       const wcGantt = document.querySelector("wc-gantt");
       wcGantt.data= window.data;
+      wcGantt.links= window.links;
       wcGantt.options = window.opts;
 
       wcGantt.addEventListener("item-click", (i) => {

@@ -21,7 +21,8 @@ export function configureMoveItem(this: WCGantt) {
       e.tagName === "rect" &&
       (e.classList.contains("back") ||
         e.classList.contains("front") ||
-        e.classList.contains("bar-border"))
+        e.classList.contains("bar-inner-border") ||
+        e.classList.contains("bar-outer-border"))
     );
   }
 

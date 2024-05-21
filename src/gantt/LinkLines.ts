@@ -1,79 +1,73 @@
-import { TemplateResult, render, svg } from "lit";
-import { ComponentSettings, Item, Link, LinkType } from "../types";
+import { svg } from "lit";
+import { ComponentSettings, Link } from "../types";
 import { p2s } from "../utils";
 import { createRoundedPathString } from "../roundedCorners";
-
-let _settings: ComponentSettings;
+import type { FlattenedItem } from "../WcGantt";
 
 export function LinkLines(this: HTMLElement, settings: ComponentSettings) {
-  _settings = settings;
-  const itemsIdsMap: Map<string, Item> = new Map();
+  const itemsIdsMap: Map<string, FlattenedItem> = new Map();
 
   settings.data.forEach((v) => {
     itemsIdsMap.set(v.id.toString(), v);
   });
   return svg`
     <g class="link-lines" >
-      ${settings.data.map((s) => {
-        if (!s.links) return null;
-
-        return s.links.map((l) =>
-          renderLink(
-            l,
-            settings,
-            itemsIdsMap.get(l.source.toString()),
-            itemsIdsMap.get(l.target.toString())
-          )
+      ${settings.links.map((s) => {
+        return renderLink(
+          s,
+          settings,
+          itemsIdsMap.get(s.source.toString()),
+          itemsIdsMap.get(s.target.toString())
         );
       })}
     </g>`;
 }
 
-export function reRenderItemLinks(item: Item, svg: SVGElement) {
-  if (!_settings) return;
+// export function reRenderItemLinks(item: Item, svg: SVGElement) {
+//   if (!_settings) return;
 
-  const allLinks = svg.querySelectorAll<SVGGElement>(".link");
+//   const allLinks = svg.querySelectorAll<SVGGElement>(".link");
 
-  for (const l of allLinks) {
-    let newL: TemplateResult;
-    if (l.dataset.source === item.id.toString()) {
-      newL = renderLink(
-        {
-          source: item.id.toString(),
-          target: l.dataset.target,
-          type: l.dataset.type as LinkType,
-        },
-        _settings,
-        item,
-        undefined
-      );
-    }
-    if (l.dataset.target === item.id.toString()) {
-      newL = renderLink(
-        {
-          target: item.id.toString(),
-          source: l.dataset.source,
-          type: l.dataset.linkType as LinkType,
-        },
-        _settings,
-        undefined,
-        item
-      );
-    }
+//   for (const l of allLinks) {
+//     let newL: TemplateResult;
+//     if (l.dataset.source === item.id.toString()) {
+//       newL = renderLink(
+//         {
+//           source: item.id.toString(),
+//           target: l.dataset.target,
+//           type: l.dataset.type as LinkType,
+//         },
+//         _settings,
+//         item,
+//         undefined
+//       );
+//     }
+//     if (l.dataset.target === item.id.toString()) {
+//       newL = renderLink(
+//         {
+//           target: item.id.toString(),
+//           source: l.dataset.source,
+//           type: l.dataset.linkType as LinkType,
+//         },
+//         _settings,
+//         undefined,
+//         item
+//       );
+//     }
 
-    if (newL) {
-      const container = l.parentElement;
-      // l.remove();
-      render(newL, container, { host: container });
-    }
-  }
-}
+//     if (newL) {
+//       const container = l.parentElement;
+//       // l.remove();
+//       render(newL, container, { host: container });
+//     }
+//   }
+// }
 
 function renderLink(
   l: Link,
   settings: ComponentSettings,
-  source?: Item,
-  target?: Item
+  source?: FlattenedItem,
+  target?: FlattenedItem
 ) {
   const targetItem =
     target ??
@@ -106,10 +100,14 @@ function renderLink(
 
   const drawLineWithArrow = (p1: number[][], p2: number[][]) => {
     const id = `${l.source}-${l.target}-${l.type}`;
+
+    let cssClass = "link";
+    if (sourceItem.crit && targetItem.crit) cssClass += " crit";
+
     return svg`
     <g 
       id=${id} 
-      class="link"
+      class=${cssClass}
       data-source=${l.source} 
       data-target=${l.target} 
       data-link-type=${l.type}>

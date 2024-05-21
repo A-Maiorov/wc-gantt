@@ -1,5 +1,5 @@
 import { type WCGantt } from "./WcGantt";
-import { ComponentSettings, Link, LinkAddedEvArgs } from "./types";
+import { Link, LinkAddedEvArgs } from "./types";
 
 export function configureAddLink(this: WCGantt) {
   const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
@@ -36,34 +36,39 @@ export function configureAddLink(this: WCGantt) {
       type: `${startType}${endType}`,
     } as Link;
 
-    const startItem = this.settings.data.find((x) => x.id == sid);
-    if (startItem) {
-      const existingLink = startItem.links.find(
-        (l) =>
-          l.source === link.source &&
-          l.target === link.target &&
-          l.type === link.type
-      );
-      if (existingLink) return;
+    //  const startItem = this.settings.data.find((x) => x.id == sid);
 
-      let isCanceled = false;
-      const evArgs = {
-        link,
-        cancel: () => {
-          isCanceled = true;
-        },
-      };
+    const existingLink = this.settings.links.find(
+      (x) => x.source === sid && x.target === eid
+    );
 
-      const ev = new CustomEvent<LinkAddedEvArgs>("before-link-added", {
-        detail: evArgs,
-      });
-      this.dispatchEvent(ev);
+    // if (startItem) {
+    //   const existingLink = startItem.links.find(
+    //     (l) =>
+    //       l.source === link.source &&
+    //       l.target === link.target &&
+    //       l.type === link.type
+    //   );
+    if (existingLink) return;
 
-      if (!isCanceled) {
-        startItem.links.push(link);
-        this.requestUpdate();
-      }
+    let isCanceled = false;
+    const evArgs = {
+      link,
+      cancel: () => {
+        isCanceled = true;
+      },
+    };
+
+    const ev = new CustomEvent<LinkAddedEvArgs>("before-link-added", {
+      detail: evArgs,
+    });
+    this.dispatchEvent(ev);
+
+    if (!isCanceled) {
+      this.settings.links.push(link);
+      this.requestUpdate();
     }
+    // }
   };
 
   const NS = "http://www.w3.org/2000/svg";
@@ -91,7 +96,7 @@ export function configureAddLink(this: WCGantt) {
     }
     e.preventDefault();
     start = e.target as SVGCircleElement;
-    const svgBar = start.parentElement as unknown as SVGSVGElement;
+    //const svgBar = start.parentElement as unknown as SVGSVGElement;
 
     this.shadowRoot
       .querySelectorAll(".activity.ctl-start,.activity.ctl-finish")

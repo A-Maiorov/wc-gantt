@@ -10,7 +10,9 @@ export const barCss = css`
     --gantt-bar-group-front-fill: #299cb4;
     --gantt-bar-today-line-stroke: #f04134;
     --gantt-bar-today-line-stroke-width: 1px;
-    --gantt-bar-border-color: var(--gantt-chart-bg-color);
+    --gantt-bar-inner-border-color: var(--gantt-chart-bg-color);
+    --gantt-bar-outer-border-color: var(--gantt-chart-bg-color);
+    --gantt-critical-path-color: #2d22f5;
   }
 
   .gantt-bar {
@@ -20,11 +22,22 @@ export const barCss = css`
     fill: var(--gantt-milestone-color, #d33daf);
   }
 
-  .bar-border {
-    stroke: var(--gantt-bar-border-color);
+  .bar-outer-border {
+    stroke: var(--gantt-bar-outer-border-color);
     stroke-width: 1px;
     fill: transparent;
   }
+
+  .bar-inner-border {
+    stroke: var(--gantt-bar-inner-border-color);
+    stroke-width: 1px;
+    fill: transparent;
+  }
+
+  .crit {
+    --gantt-bar-inner-border-color: var(--gantt-critical-path-color);
+  }
+
   .gantt-bar .back {
     fill: var(--gantt-bar-back-fill, #65c16f);
   }

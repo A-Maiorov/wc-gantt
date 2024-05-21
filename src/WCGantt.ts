@@ -8,6 +8,7 @@ import {
   isActivity,
   isGroup,
   isMilestone,
+  type Link,
 } from "./types";
 import { Gantt, getHeader } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
@@ -18,6 +19,7 @@ import { configureAddLink } from "./addLink";
 import { configureMoveItem } from "./moveItem";
 import { TimeScale } from "./timeScale";
 import { configureResizeItem } from "./resizeItem";
+import { findLongestPath } from "./criticalPath";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -146,6 +148,7 @@ export class WCGantt extends LitElement {
       showDelay: true,
       showLinks: true,
       showLabels: true,
+      showCriticalPath: false,
     };
 
     this.settings = {
@@ -161,9 +164,11 @@ export class WCGantt extends LitElement {
       barHeight: barHeight,
       lineWidth,
       data,
+      links: this.links,
       timeScale: undefined,
       ...this.options,
     };
+
     this.settings.timeScale = new TimeScale(
       addDays(start, -1),
       addDays(end, 7),
@@ -175,7 +180,75 @@ export class WCGantt extends LitElement {
     this.settings.height = this.settings.data.length * this.settings.rowHeight;
 
     this.setupInteractions();
+
+    const nonGroups = this.settings.data.filter((x) => x.type !== "group");
+    const minItems = nonGroups.filter(
+      (x) =>
+        x.start.getTime() ===
+        Math.min(...nonGroups.map((r) => r.start.getTime()))
+    );
+
+    const maxItems = nonGroups.filter(
+      (x) =>
+        x.end.getTime() === Math.max(...nonGroups.map((r) => r.end.getTime()))
+    );
+
+    const critItems: (string | number)[] = [];
+    for (const x of minItems) {
+      const lp = findLongestPath.bind(this)(x.id as string | number);
+
+      if (maxItems.map((x) => x.id).includes(lp.path[lp.path.length - 1]))
+        critItems.push(...lp.path);
+      // for (const lpItem of lp.path) {
+      //   this.settings.data.find((x) => x.id === lpItem).crit = true;
+    }
+
+    for (const i of this.settings.data) {
+      i.crit = critItems.includes(i.id as string | number);
+    }
+
+    //this.showCriticalPath();
   }
+
+  // private showCriticalPath() {
+  //   if (this.settings.showCriticalPath) {
+  //     const nonGroups = this.settings.data.filter((x) => x.type !== "group");
+  //     // const maxItems = nonGroups.filter(
+  //     //   (x) =>
+  //     //     x.end.getTime() === Math.max(...nonGroups.map((r) => r.end.getTime()))
+  //     // );
+
+  //     const findCriticalPath = (i: FlattenedItem): FlattenedItem => {
+  //       i.crit = true;
+
+  //       const predecessors = this.links
+  //         .filter((x) => x.target === i.id)
+  //         .map((x) => nonGroups.find((f) => f.id === x.source));
+
+  //       // const predecessors = nonGroups.filter(
+  //       //   (x) => x.id !== i.id && (x.links ?? []).some((l) => l.target === i.id)
+  //       // );
+
+  //       // const x = nonGroups.filter(
+  //       //   (f) => f.id !== i.id && (i.links ?? []).some((x) => x.source === f.id)
+  //       // );
+
+  //       //predecessors.push(...x);
+
+  //       if (predecessors.length === 0) return i;
+
+  //       const min = predecessors.filter(
+  //         (f) =>
+  //           f.start.getTime() ===
+  //           Math.min(...predecessors.map((x) => x.start.getTime()))
+  //       );
+
+  //       for (const m of min) findCriticalPath(m);
+  //     };
+
+  //     findCriticalPath(maxItem);
+  //   }
+  // }
 
   private flattenData(data: Item[], path?: string, parent?: FlattenedItem) {
     const d: FlattenedItem[] = [];
@@ -229,6 +302,9 @@ export class WCGantt extends LitElement {
 
   @property({ type: Array, attribute: false })
   data: Item[];
+
+  @property({ type: Array, attribute: false })
+  links: Link[];
 
   private interactionReady = false;
 
@@ -353,4 +429,5 @@ export class WCGantt extends LitElement {
 export interface FlattenedItem extends Item {
   path: string;
   parents?: FlattenedItem[];
+  crit?: boolean;
 }

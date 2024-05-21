@@ -19,6 +19,14 @@ export const linkLineCss = css`
     fill: var(--gantt-link-line-stroke, #ffa011);
   }
 
+  .link.crit .link-line {
+    stroke: var(--gantt-critical-path-color);
+  }
+
+  .link.crit .line-arrow {
+    fill: var(--gantt-critical-path-color);
+  }
+
   .add-link-line {
     stroke: var(--gantt-link-line-stroke, #ffa011);
     stroke-width: 2;
