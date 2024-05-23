@@ -1,4 +1,4 @@
-import { GanttViewMode } from "./types";
+import type { TimeScaleMode } from "./settings";
 
 const msPerDay = 86400000;
 
@@ -13,12 +13,12 @@ export class TimeScale {
   totalDays: number;
   endMs: number;
   viewMode: string;
-  constructor(start: Date, end: Date, viewMode: GanttViewMode) {
+  constructor(start: Date, end: Date, viewMode: TimeScaleMode) {
     this.viewMode = viewMode;
     const startDay = new Date(start);
-    startDay.setHours(1, 0, 0, 0);
+    startDay.setHours(0, 0, 0, 0);
     const endDay = new Date(end);
-    endDay.setHours(1, 0, 0, 0);
+    endDay.setHours(0, 0, 0, 0);
 
     this.start = startDay;
     this.end = endDay;
@@ -28,7 +28,7 @@ export class TimeScale {
       Math.abs((this.startMs - endDay.getTime()) / msPerDay)
     );
 
-    const viewModeMultiplier: Record<GanttViewMode, number> = {
+    const viewModeMultiplier: Record<TimeScaleMode, number> = {
       month: 3,
       week: 4,
       day: 5,

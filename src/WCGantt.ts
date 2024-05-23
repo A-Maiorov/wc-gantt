@@ -1,25 +1,22 @@
-import { minDate, maxDate, addDays } from "./utils";
 import { customElement, property } from "lit/decorators.js";
 import { LitElement, css, html } from "lit";
-import {
-  ComponentSettings,
-  Item,
-  WcGanttOptions,
-  isActivity,
-  isGroup,
-  isMilestone,
-  type Link,
-} from "./types";
+
 import { Gantt, getHeader } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
 import { linkLineCss } from "./gantt/linkLine.css";
 import { barCss } from "./gantt/bar.css";
 import { layoutCss } from "./gantt/layout.css";
 import { configureAddLink } from "./addLink";
-import { configureMoveItem } from "./moveItem";
-import { TimeScale } from "./timeScale";
+
 import { configureResizeItem } from "./resizeItem";
-import { findLongestPath } from "./criticalPath";
+// import { findLongestPath } from "./criticalPath";
+import { WcGanttSettings, type CompiledSettings } from "./settings";
+import {
+  Schedule,
+  type DependencyType,
+  type IDependency,
+  type IItem,
+} from "./schedule";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -108,11 +105,8 @@ export class WCGantt extends LitElement {
     barCss,
   ];
 
-  connectedCallback(): void {
-    super.connectedCallback();
-  }
-
-  settings: ComponentSettings;
+  settings: CompiledSettings;
+  schedule: Schedule;
 
   private updateSettings() {
     const rowHeight = parseFloat(
@@ -130,166 +124,28 @@ export class WCGantt extends LitElement {
       getComputedStyle(this).getPropertyValue("--gantt-layout-line-width")
     );
 
-    const data = this.flattenData(this.data);
-
-    let start: Date | null = this.options?.minDate ?? null;
-    let end: Date | null = this.options?.maxDate ?? null;
-    data.forEach((v) => {
-      start = minDate(start, v.start);
-      end = maxDate(end, v.end);
-    });
-
-    start = start || new Date();
-    end = end || new Date();
-
-    const defaultOpts: WcGanttOptions = {
-      viewMode: "week",
-
-      showDelay: true,
-      showLinks: true,
-      showLabels: true,
-      showCriticalPath: false,
-    };
+    const defaultOpts = new WcGanttSettings();
 
     this.settings = {
       ...defaultOpts,
-      ...this.options,
-      start,
-      end,
+      scaleHeight,
+      rowHeight,
+      barHeight,
+      lineWidth,
       labelsWidth: 0,
       width: 0,
       height: 0,
-      scaleHeight: scaleHeight,
-      rowHeight: rowHeight,
-      barHeight: barHeight,
-      lineWidth,
-      data,
-      links: this.links,
-      timeScale: undefined,
       ...this.options,
     };
 
-    this.settings.timeScale = new TimeScale(
-      addDays(start, -1),
-      addDays(end, 7),
-      this.settings.viewMode
+    this.schedule = new Schedule(
+      this.settings.startDate,
+      this.settings.dataDate,
+      this.items,
+      this.dependencies
     );
-
-    this.settings.width =
-      this.settings.timeScale.totalDays * this.settings.timeScale.pxPerDay;
-    this.settings.height = this.settings.data.length * this.settings.rowHeight;
 
     this.setupInteractions();
-
-    const nonGroups = this.settings.data.filter((x) => x.type !== "group");
-    const minItems = nonGroups.filter(
-      (x) =>
-        x.start.getTime() ===
-        Math.min(...nonGroups.map((r) => r.start.getTime()))
-    );
-
-    const maxItems = nonGroups.filter(
-      (x) =>
-        x.end.getTime() === Math.max(...nonGroups.map((r) => r.end.getTime()))
-    );
-
-    const critItems: (string | number)[] = [];
-    for (const x of minItems) {
-      const lp = findLongestPath.bind(this)(x.id as string | number);
-
-      if (maxItems.map((x) => x.id).includes(lp.path[lp.path.length - 1]))
-        critItems.push(...lp.path);
-      // for (const lpItem of lp.path) {
-      //   this.settings.data.find((x) => x.id === lpItem).crit = true;
-    }
-
-    for (const i of this.settings.data) {
-      i.crit = critItems.includes(i.id as string | number);
-    }
-
-    //this.showCriticalPath();
-  }
-
-  // private showCriticalPath() {
-  //   if (this.settings.showCriticalPath) {
-  //     const nonGroups = this.settings.data.filter((x) => x.type !== "group");
-  //     // const maxItems = nonGroups.filter(
-  //     //   (x) =>
-  //     //     x.end.getTime() === Math.max(...nonGroups.map((r) => r.end.getTime()))
-  //     // );
-
-  //     const findCriticalPath = (i: FlattenedItem): FlattenedItem => {
-  //       i.crit = true;
-
-  //       const predecessors = this.links
-  //         .filter((x) => x.target === i.id)
-  //         .map((x) => nonGroups.find((f) => f.id === x.source));
-
-  //       // const predecessors = nonGroups.filter(
-  //       //   (x) => x.id !== i.id && (x.links ?? []).some((l) => l.target === i.id)
-  //       // );
-
-  //       // const x = nonGroups.filter(
-  //       //   (f) => f.id !== i.id && (i.links ?? []).some((x) => x.source === f.id)
-  //       // );
-
-  //       //predecessors.push(...x);
-
-  //       if (predecessors.length === 0) return i;
-
-  //       const min = predecessors.filter(
-  //         (f) =>
-  //           f.start.getTime() ===
-  //           Math.min(...predecessors.map((x) => x.start.getTime()))
-  //       );
-
-  //       for (const m of min) findCriticalPath(m);
-  //     };
-
-  //     findCriticalPath(maxItem);
-  //   }
-  // }
-
-  private flattenData(data: Item[], path?: string, parent?: FlattenedItem) {
-    const d: FlattenedItem[] = [];
-    let ind = 0;
-    for (const i of data) {
-      this.validateItem(i);
-      const f = i as FlattenedItem;
-
-      f.parents = [];
-      if (parent) f.parents = [...(parent.parents ?? []), parent];
-
-      f.path = path ? path + "." + ind : ind.toString();
-      f.id ??= f.path;
-      d.push(f);
-      if (i.nested?.length > 0) {
-        d.push(...this.flattenData(i.nested, f.path, f));
-      }
-      ind++;
-    }
-    return d;
-  }
-
-  private validateItem(i: Item) {
-    const res = isGroup(i) || isActivity(i) || isMilestone(i);
-    if (!res)
-      throw Error("Gantt item is not valid: id:" + i.id + "; text: " + i.text);
-
-    i.start ??= new Date();
-    i.end ??= addDays(i.start, 5);
-
-    i.start.setHours(1, 0, 0, 0);
-    i.end.setHours(1, 0, 0, 0);
-
-    if (i.start > i.end)
-      Error(
-        "Gantt item is not valid: id:" +
-          i.id +
-          "; text: " +
-          i.text +
-          "; End before start"
-      );
   }
 
   ___lastMovement: number = 0;
@@ -298,13 +154,13 @@ export class WCGantt extends LitElement {
   }
 
   @property({ type: Object, attribute: false })
-  options: WcGanttOptions;
+  options: WcGanttSettings;
 
   @property({ type: Array, attribute: false })
-  data: Item[];
+  items: IItem[];
 
   @property({ type: Array, attribute: false })
-  links: Link[];
+  dependencies: IDependency[];
 
   private interactionReady = false;
 
@@ -312,9 +168,33 @@ export class WCGantt extends LitElement {
     if (this.interactionReady) return;
     await this.updateComplete;
     configureAddLink.bind(this)();
-    configureMoveItem.bind(this)();
+    // configureMoveItem.bind(this)();
     configureResizeItem.bind(this)();
+
     this.interactionReady = true;
+  }
+
+  private configureDependencyClick() {
+    const svg = this.shadowRoot.getElementById(
+      "gantt"
+    ) as unknown as SVGElement;
+    const links = svg.querySelectorAll<HTMLElement>(".link");
+
+    const handler = (e: Event) => {
+      const linkEl = e.currentTarget as HTMLElement;
+      const dep = {
+        predecessor: linkEl.dataset.source,
+        successor: linkEl.dataset.target,
+        type: linkEl.dataset.linkType as DependencyType,
+      };
+
+      const ev = new CustomEvent("dependency-click", { detail: dep });
+      this.dispatchEvent(ev);
+    };
+
+    for (const l of links) {
+      l.onclick = handler;
+    }
   }
 
   private __timeScaleEl: HTMLDivElement;
@@ -346,7 +226,8 @@ export class WCGantt extends LitElement {
   private scrollReady = false;
 
   protected updated() {
-    if (!this.data || this.data.length === 0 || this.scrollReady) return;
+    if (!this.items || this.items.length === 0 || this.scrollReady) return;
+
     const el = this.renderRoot
       .querySelector<HTMLSlotElement>("slot[data-labels]")
       .assignedElements({ flatten: true })[0];
@@ -379,15 +260,37 @@ export class WCGantt extends LitElement {
     this.scrollReady = true;
   }
 
+  protected willUpdate(_changedProperties: Map<PropertyKey, unknown>): void {
+    if (
+      _changedProperties.has("items") ||
+      _changedProperties.has("dependencies") ||
+      _changedProperties.has("options")
+    )
+      this.updateSettings();
+
+    if (!this.settings) return;
+
+    if (this.settings.showCriticalPath) {
+      this.schedule.updateCriticalPath();
+    }
+
+    this.settings.width =
+      this.schedule.timeScale.totalDays * this.schedule.timeScale.pxPerDay;
+    this.settings.height = this.schedule.items.length * this.settings.rowHeight;
+
+    this.updateComplete.then(() => {
+      this.configureDependencyClick();
+    });
+  }
+
   render() {
-    if (!this.data || this.data.length === 0) return "No data";
-    this.updateSettings();
+    if (!this.items || this.items.length === 0) return "No data";
 
     const labels = this.settings.showLabels
       ? html`
           <div class="labels">
-            ${this.settings.data.map(
-              (x) => html`<div class="lbl">${x.text}</div>`
+            ${this.schedule.items.map(
+              (x) => html`<div class="lbl">${x.name}</div>`
             )}
           </div>
         `
@@ -424,10 +327,4 @@ export class WCGantt extends LitElement {
       });
     }
   }
-}
-
-export interface FlattenedItem extends Item {
-  path: string;
-  parents?: FlattenedItem[];
-  crit?: boolean;
 }

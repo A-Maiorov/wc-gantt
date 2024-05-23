@@ -6,11 +6,11 @@ import { context } from "esbuild";
  */
 const appOptions = {
   bundle: true,
-  minify: true,
+  minify: false,
   minifyWhitespace: true,
   minifySyntax: true,
   sourcemap: true,
-  target: ["es2020", "chrome89", "firefox90", "safari14"],
+  target: ["es2022"],
   platform: "browser",
   format: "esm",
   logLevel: "info",

@@ -8,8 +8,8 @@ export const controlsCss = css`
     --ctl-stroke-width: 1px;
   }
 
-  .gantt-bar:hover .ctl-start,
-  .gantt-bar:hover .ctl-finish,
+  .gantt-bar:hover .ctl-start:not([disabled]),
+  .gantt-bar:hover .ctl-finish:not([disabled]),
   .gantt-bar:hover .ctl-resize-start,
   .gantt-bar:hover .ctl-resize-end {
     opacity: 1;
@@ -19,8 +19,8 @@ export const controlsCss = css`
 
   .ctl-start[active],
   .ctl-finish[active],
-  .ctl-start:hover,
-  .ctl-finish:hover {
+  .ctl-start:not([disabled]):hover,
+  .ctl-finish:not([disabled]):hover {
     opacity: 1;
     cursor: grabbed;
     fill: var(--gantt-active-ctl-fill, #ffbf5e);
@@ -36,6 +36,11 @@ export const controlsCss = css`
     fill: var(--gantt-inactive-ctl-fill, #f0f0f0);
     stroke: var(--gantt-inactive-ctl-stroke, #929292);
     stroke-width: var(--ctl-stroke-width, 1px);
+  }
+  .ctl-start[disabled],
+  .ctl-finish[disabled] {
+    opacity: 0;
+    cursor: default;
   }
 
   .ctl-resize-start[active],

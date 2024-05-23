@@ -1,44 +1,57 @@
-import type { WCGantt } from "./WcGantt";
-import type { ComponentSettings } from "./types";
+import dayjs from "dayjs";
+import type { IDependency, Schedule } from "./schedule";
+
 import { MsInDAY } from "./utils";
 
 class TreeNode {
-  startDate: Date = this.settings.data.find((x) => x.id === this.id).start;
-  endDate: Date = this.settings.data.find((x) => x.id === this.id).end;
+  startDate: Date = this.schedule.itemsIndex.get(this.id).earlyStart;
+  endDate: Date = this.schedule.itemsIndex.get(this.id).earlyFinish;
   get children(): TreeNode[] {
-    return this.settings.links
-      .filter((l) => l.source === this.id)
-      .map((x) => new TreeNode(this.settings, x.target));
+    return this.schedule.dependencies
+      .filter(
+        (l) =>
+          l.predecessor === this.id &&
+          dayjs(this.schedule.itemsIndex.get(this.id).earlyFinish)
+            .add(l.lag, "days")
+            .toDate()
+            .getTime() === this.__getSucDate(l)
+      )
+      .map((x) => new TreeNode(this.schedule, x.successor));
   }
 
-  constructor(
-    protected settings: ComponentSettings,
-    public id: string | number
-  ) {}
+  private __getSucDate(l: IDependency) {
+    if (l.type.endsWith("F"))
+      return this.schedule.itemsIndex.get(l.successor).earlyFinish.getTime();
+
+    if (l.type.endsWith("S"))
+      return this.schedule.itemsIndex.get(l.successor).earlyStart.getTime();
+  }
+
+  constructor(protected schedule: Schedule, public id: string) {}
 }
 
 export function findLongestPath(
-  this: WCGantt,
-  i: string | number
+  startItemId: string,
+  schedule: Schedule
 ): {
   longestDuration: number;
-  path: (string | number)[];
+  path: string[];
 } {
   let longestPathResult = {
     longestDuration: 0,
-    path: [] as (string | number)[],
+    path: [] as string[],
   };
 
   const dfs = (
-    currentNodeId: string | number | null,
-    path: (string | number)[],
+    currentNodeId: string | null,
+    path: string[],
     currentDuration: number
   ): void => {
     if (currentNodeId === null) {
       return;
     }
 
-    const currentNode: TreeNode = new TreeNode(this.settings, currentNodeId);
+    const currentNode: TreeNode = new TreeNode(schedule, currentNodeId);
 
     // Calculate the duration of the current node
     const nodeDuration =
@@ -64,7 +77,7 @@ export function findLongestPath(
   };
 
   // Initialize DFS from the root
-  dfs(i, [], 0);
+  dfs(startItemId, [], 0);
 
   longestPathResult.longestDuration =
     longestPathResult.longestDuration / MsInDAY;

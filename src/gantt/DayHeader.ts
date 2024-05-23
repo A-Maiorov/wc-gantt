@@ -1,10 +1,10 @@
-import { ComponentSettings } from "../types";
 import { YearMonth } from "./YearMonth";
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
+import type { WCGantt } from "../WcGantt";
 
-export function DayHeader(settings: ComponentSettings) {
-  const scale = settings.timeScale;
+export function DayHeader(this: WCGantt) {
+  const scale = this.schedule.timeScale;
   const currentDay = new Date(scale.startMs);
   const ticks = [];
 
@@ -12,25 +12,7 @@ export function DayHeader(settings: ComponentSettings) {
     const x = day * scale.pxPerDay;
     const textX = x + scale.pxPerDay / 2;
 
-    // const lastDayLine =
-    //   day === scale.totalDays - 1
-    //     ? svg`<line
-    //     x1=${x + scale.pxPerDay}
-    //     x2=${x + scale.pxPerDay}
-    //     y1=${lineY}
-    //     y2=${settings.scaleHeight}
-    //     class="line"
-    //   />`
-    //     : null;
-    //     ${lastDayLine}
-
     const currDate = currentDay.getDate();
-    // const dayLine =
-    //   currDate !== 1
-    //     ? svg`<rect x=${x} y=${lineY} width="1" height=${lineH}
-    //     class="line scale day"
-    //     />`
-    //     : null;
 
     ticks.push({
       id: day,
@@ -40,14 +22,14 @@ export function DayHeader(settings: ComponentSettings) {
         <line
           x1=${x}
           x2=${x}
-          y1=${settings.scaleHeight / 2}
-          y2=${settings.scaleHeight}
+          y1=${this.settings.scaleHeight / 2}
+          y2=${this.settings.scaleHeight}
           class="line"       
         />   
         <text 
           id=${day} 
           x=${textX} 
-          y=${settings.scaleHeight * 0.75} 
+          y=${this.settings.scaleHeight * 0.75} 
           class="text small">
           ${currDate}
         </text>
@@ -61,12 +43,12 @@ export function DayHeader(settings: ComponentSettings) {
 
   return svg`
   <g id="dayHeader">
-    ${YearMonth({ ...settings })}
+    ${YearMonth.bind(this)()}
     <line
         x1=${0}
-        x2=${settings.width}
-        y1=${settings.scaleHeight / 2}
-        y2=${settings.scaleHeight / 2}
+        x2=${this.settings.width}
+        y1=${this.settings.scaleHeight / 2}
+        y2=${this.settings.scaleHeight / 2}
         class="line"
         
       />

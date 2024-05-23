@@ -1,32 +1,36 @@
 import { svg } from "lit";
-import { addDays, getWeekNumber, getWeeks } from "../utils";
+import { getWeekNumber, getWeeks } from "../utils";
 import { YearMonth } from "./YearMonth";
 import { repeat } from "lit/directives/repeat.js";
-import { ComponentSettings } from "../types";
+import type { WCGantt } from "../WcGantt";
+import dayjs from "dayjs";
 
-export function WeekHeader(settings: ComponentSettings) {
-  const weeks = getWeeks(settings.timeScale.start, settings.timeScale.end);
+export function WeekHeader(this: WCGantt) {
+  const weeks = getWeeks(
+    this.schedule.timeScale.start,
+    this.schedule.timeScale.end
+  );
 
   const ticks = [];
   //const y0 = settings.scaleHeight;
   //const RH = settings.height - y0;
-  const d = settings.timeScale.pxPerDay;
+  const d = this.schedule.timeScale.pxPerDay;
   const len = weeks.length - 1;
 
-  const oneFourthScaleH = settings.scaleHeight / 4;
+  const oneFourthScaleH = this.settings.scaleHeight / 4;
 
   for (let i = 0; i < len; i++) {
     const cur = new Date(weeks[i]);
-    const x = settings.timeScale.dateToPx(cur);
+    const x = this.schedule.timeScale.dateToPx(cur);
     const curDay = cur.getDate();
-    const prevDay = addDays(cur, -1).getDate();
+    const prevDay = dayjs(cur).subtract(1, "day").toDate().getDate(); // addDays(cur, -1).getDate();
     const id = "week_" + i + "_" + prevDay + "-" + curDay;
 
-    const textMargin = settings.scaleHeight / 6;
-    const textOffsetY = settings.scaleHeight - textMargin;
+    const textMargin = this.settings.scaleHeight / 6;
+    const textOffsetY = this.settings.scaleHeight - textMargin;
     const weekTextOffsetY = oneFourthScaleH * 2 + textMargin;
 
-    const weekNumber = getWeekNumber(addDays(cur, 1));
+    const weekNumber = getWeekNumber(dayjs(cur).add(1, "day").toDate());
     ticks.push({
       id,
       tpl: svg`
@@ -38,8 +42,8 @@ export function WeekHeader(settings: ComponentSettings) {
         <line
           x1=${x}
           x2=${x}
-          y1=${settings.scaleHeight / 2}
-          y2=${settings.scaleHeight}
+          y1=${this.settings.scaleHeight / 2}
+          y2=${this.settings.scaleHeight}
           class="line"       
         />    
         <text x=${x + 3} y=${textOffsetY} class="text small start">
@@ -54,12 +58,12 @@ export function WeekHeader(settings: ComponentSettings) {
   }
   return svg`
     <g id="weekHeader">
-      ${YearMonth({ ...settings })}
+      ${YearMonth.bind(this)()}
       <line
         x1=${0}
-        x2=${settings.width}
-        y1=${settings.scaleHeight / 2}
-        y2=${settings.scaleHeight / 2}
+        x2=${this.settings.width}
+        y1=${this.settings.scaleHeight / 2}
+        y2=${this.settings.scaleHeight / 2}
         class="line"
         
       />

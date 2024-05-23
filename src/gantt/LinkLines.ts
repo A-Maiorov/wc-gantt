@@ -1,105 +1,75 @@
 import { svg } from "lit";
-import { ComponentSettings, Link } from "../types";
+
 import { p2s } from "../utils";
 import { createRoundedPathString } from "../roundedCorners";
-import type { FlattenedItem } from "../WcGantt";
+import type { WCGantt } from "../WcGantt";
+import type { IDependency, Item } from "../schedule";
 
-export function LinkLines(this: HTMLElement, settings: ComponentSettings) {
-  const itemsIdsMap: Map<string, FlattenedItem> = new Map();
+export function LinkLines(this: WCGantt) {
+  const itemsIdsMap: Map<string, Item> = this.schedule.itemsIndex;
 
-  settings.data.forEach((v) => {
-    itemsIdsMap.set(v.id.toString(), v);
-  });
   return svg`
     <g class="link-lines" >
-      ${settings.links.map((s) => {
-        return renderLink(
-          s,
-          settings,
-          itemsIdsMap.get(s.source.toString()),
-          itemsIdsMap.get(s.target.toString())
-        );
-      })}
+      ${this.schedule.dependencies
+        .sort((a, b) => {
+          const aa = +(
+            itemsIdsMap.get(a.predecessor).crit &&
+            itemsIdsMap.get(a.successor).crit
+          );
+          const bb = +(
+            itemsIdsMap.get(b.predecessor).crit &&
+            itemsIdsMap.get(b.successor).crit
+          );
+          return aa - bb;
+        })
+        .map((s) => {
+          return renderLink.bind(this)(
+            s,
+            itemsIdsMap.get(s.predecessor.toString()),
+            itemsIdsMap.get(s.successor.toString())
+          );
+        })}
     </g>`;
 }
 
-// export function reRenderItemLinks(item: Item, svg: SVGElement) {
-//   if (!_settings) return;
-
-//   const allLinks = svg.querySelectorAll<SVGGElement>(".link");
-
-//   for (const l of allLinks) {
-//     let newL: TemplateResult;
-//     if (l.dataset.source === item.id.toString()) {
-//       newL = renderLink(
-//         {
-//           source: item.id.toString(),
-//           target: l.dataset.target,
-//           type: l.dataset.type as LinkType,
-//         },
-//         _settings,
-//         item,
-//         undefined
-//       );
-//     }
-//     if (l.dataset.target === item.id.toString()) {
-//       newL = renderLink(
-//         {
-//           target: item.id.toString(),
-//           source: l.dataset.source,
-//           type: l.dataset.linkType as LinkType,
-//         },
-//         _settings,
-//         undefined,
-//         item
-//       );
-//     }
-
-//     if (newL) {
-//       const container = l.parentElement;
-//       // l.remove();
-//       render(newL, container, { host: container });
-//     }
-//   }
-// }
-
 function renderLink(
-  l: Link,
-  settings: ComponentSettings,
-  source?: FlattenedItem,
-  target?: FlattenedItem
+  this: WCGantt,
+  l: IDependency,
+  source?: Item,
+  target?: Item
 ) {
   const targetItem =
-    target ??
-    settings.data.find((x) => x.id.toString() === l.target.toString());
+    target ?? this.schedule.itemsIndex.get(l.successor.toString());
   const sourceItem =
-    source ??
-    settings.data.find((x) => x.id.toString() === l.source.toString());
-  if (!targetItem || !targetItem.start || !targetItem.end) return null;
-  if (!sourceItem || !sourceItem.start || !sourceItem.end) return null;
+    source ?? this.schedule.itemsIndex.get(l.predecessor.toString());
+  if (!targetItem || !targetItem.earlyStart || !targetItem.earlyFinish)
+    return null;
+  if (!sourceItem || !sourceItem.earlyStart || !sourceItem.earlyFinish)
+    return null;
 
-  const y0 = settings.rowHeight / 2;
+  const y0 = this.settings.rowHeight / 2;
 
-  const i = settings.data.findIndex((x) => x.id === sourceItem.id);
-  const j = settings.data.findIndex((x) => x.id === targetItem.id);
+  const i = this.schedule.items.findIndex((x) => x.id === sourceItem.id);
+  const j = this.schedule.items.findIndex((x) => x.id === targetItem.id);
 
   const gap = 12;
   const arrow = 3;
-  const mgap = targetItem.type === "milestone" ? settings.barHeight / 2 : 0;
-  const y1 = y0 + i * settings.rowHeight;
-  const y2 = y0 + j * settings.rowHeight;
+  const mgap =
+    targetItem.type === "milestone" ? this.settings.barHeight / 2 : 0;
+  const y1 = y0 + i * this.settings.rowHeight;
+  const y2 = y0 + j * this.settings.rowHeight;
 
-  let vgap = settings.barHeight / 2 + 4;
+  let vgap = this.settings.barHeight / 2 + 4;
   if (y1 > y2) {
     vgap = -vgap;
   }
-  const sEndX = settings.timeScale.dateToPx(sourceItem.end);
-  const sStartX = settings.timeScale.dateToPx(sourceItem.start);
-  const eEndX = settings.timeScale.dateToPx(targetItem.end);
-  const eStartX = settings.timeScale.dateToPx(targetItem.start);
+  const sEndX = this.schedule.timeScale.dateToPx(sourceItem.earlyFinish);
+  const sStartX = this.schedule.timeScale.dateToPx(sourceItem.earlyStart);
+  const eEndX = this.schedule.timeScale.dateToPx(targetItem.earlyFinish);
+  const eStartX = this.schedule.timeScale.dateToPx(targetItem.earlyStart);
 
   const drawLineWithArrow = (p1: number[][], p2: number[][]) => {
-    const id = `${l.source}-${l.target}-${l.type}`;
+    const id = `${l.predecessor}-${l.successor}-${l.type}`;
 
     let cssClass = "link";
     if (sourceItem.crit && targetItem.crit) cssClass += " crit";
@@ -108,8 +78,8 @@ function renderLink(
     <g 
       id=${id} 
       class=${cssClass}
-      data-source=${l.source} 
-      data-target=${l.target} 
+      data-source=${l.predecessor} 
+      data-target=${l.successor} 
       data-link-type=${l.type}>
       <path d=${createRoundedPathString(p1)} class="link-line" ></path>     
       <polygon points=${p2s(p2)} class="line-arrow" />

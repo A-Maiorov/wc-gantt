@@ -5,9 +5,18 @@ export const linkLineCss = css`
     --gantt-link-line-stroke: #ffa011;
     --gantt-link-line-stroke-width: 1.5px;
   }
-  .link-line:hover {
+  .link:hover .link-line {
     stroke-width: var(--gantt-link-line-hover-stroke-width, 2.5);
     cursor: pointer;
+  }
+  .link:hover .link-line,
+  .link:hover .line-arrow {
+    stroke-width: var(--gantt-link-line-hover-stroke-width, 2.5);
+    stroke: var(--gantt-link-line-stroke, #ffa011);
+    cursor: pointer;
+  }
+  .link.crit:hover .line-arrow {
+    stroke: var(--gantt-critical-path-color);
   }
 
   .link-line {
@@ -16,6 +25,7 @@ export const linkLineCss = css`
     stroke-width: var(--gantt-link-line-stroke-width, 1.5px);
   }
   .line-arrow {
+    stroke: unset;
     fill: var(--gantt-link-line-stroke, #ffa011);
   }
 
