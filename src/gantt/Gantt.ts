@@ -8,14 +8,14 @@ import { Grid } from "./Grid";
 import { LinkLines } from "./LinkLines";
 import { Bar } from "./Bar";
 import { svg } from "lit";
-import { ComponentSettings } from "../types";
 import { WCGantt } from "../WcGantt";
+import type { CompiledSettings } from "../settings";
 
 export function Gantt(this: WCGantt) {
   const box = `0 0 ${this.settings.width} ${this.settings.height}`;
 
-  const linkLines = this.settings.showLinks
-    ? LinkLines.bind(this)(this.settings)
+  const linkLines = this.settings.showDependencies
+    ? LinkLines.bind(this)()
     : null;
 
   return svg`
@@ -39,17 +39,17 @@ export function Gantt(this: WCGantt) {
 //   <stop offset="100%" stop-color="var(--gantt-chart-bg-color)"/>
 // </linearGradient>
 // </defs>
-export function getHeader(this: WCGantt, settings: ComponentSettings) {
+export function getHeader(this: WCGantt, settings: CompiledSettings) {
   let res;
-  switch (settings.viewMode) {
+  switch (settings.timeScaleMode) {
     case "day":
-      res = DayHeader.bind(this)(settings);
+      res = DayHeader.bind(this)();
       break;
     case "month":
-      res = MonthHeader.bind(this)(settings);
+      res = MonthHeader.bind(this)();
       break;
     case "week":
-      res = WeekHeader.bind(this)(settings);
+      res = WeekHeader.bind(this)();
       break;
   }
 

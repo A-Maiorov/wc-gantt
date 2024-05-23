@@ -5,13 +5,13 @@ import { litCssPlugin } from "esbuild-plugin-lit-css";
 /**
  * @type import("esbuild").BuildOptions
  */
-const appOptions = {
+const opts = {
   bundle: true,
   minify: true,
   minifyWhitespace: true,
   minifySyntax: true,
   sourcemap: false,
-  target: ["es2020", "chrome89", "firefox90", "safari14"],
+  target: ["es2022"],
   platform: "browser",
   format: "esm",
   logLevel: "info",
@@ -24,4 +24,4 @@ const appOptions = {
     litCssPlugin(),
   ],
 };
-await build(appOptions);
+await build(opts);

@@ -1,54 +1,27 @@
-import { type FlattenedItem, type WCGantt } from "./WcGantt";
-//import { getControlGap } from "./gantt/Bar";
-//import type { TimeScale } from "./timeScale";
+import { type WCGantt } from "./WcGantt";
+import type { Item } from "./schedule";
 
-import {
-  Item,
-  //  isGroup
-} from "./types";
 import { MsInDAY } from "./utils";
 
 let svg: SVGElement = undefined;
-// let timeScale: TimeScale = undefined;
-// let controlGap: number = 0;
+
 export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
   if (!svg) return;
 
+  const diffDays = Math.abs(Math.round(diffMs / MsInDAY));
+
   if (resizeStart) {
-    let newStart = new Date(itm.start.getTime() + diffMs);
-
     if (diffMs > 0) {
-      if (diffMs < MsInDAY) {
-        diffMs = MsInDAY;
-        newStart = new Date(itm.start.getTime() + diffMs);
-      }
-
-      // moving start right = shrink item
+      itm.duration = Math.max(itm.duration - diffDays, 1);
     } else {
-      if (diffMs > MsInDAY * -1) {
-        diffMs = MsInDAY * -1;
-        newStart = new Date(itm.start.getTime() + diffMs);
-      }
+      itm.duration += diffDays;
     }
-
-    itm.start = newStart;
   } else {
-    let newEnd = new Date(itm.end.getTime() + diffMs);
-
     if (diffMs < 0) {
-      if (diffMs > MsInDAY * -1) {
-        diffMs = MsInDAY * -1;
-        newEnd = new Date(itm.end.getTime() + diffMs);
-      }
-
-      // // moving end left = shrink item
+      itm.duration = Math.max(itm.duration - diffDays, 1);
     } else {
-      if (diffMs < MsInDAY) {
-        diffMs = MsInDAY;
-        newEnd = new Date(itm.end.getTime() + diffMs);
-      }
+      itm.duration += diffDays;
     }
-    itm.end = newEnd;
   }
 };
 export function configureResizeItem(this: WCGantt) {
@@ -62,9 +35,9 @@ export function configureResizeItem(this: WCGantt) {
   //let rectSvg: SVGRectElement = undefined;
 
   let itemId: string | number | undefined;
-  let item: FlattenedItem;
+  let item: Item;
   let resizeStart = false;
-  let resizeEnd = false;
+  //let resizeEnd = false;
   let initialX: number = undefined;
 
   function isResizeControl(e: MouseEvent) {
@@ -79,7 +52,7 @@ export function configureResizeItem(this: WCGantt) {
 
     if (_resizeStart || _resizeEnd) {
       resizeStart = _resizeStart;
-      resizeEnd = _resizeEnd;
+      //resizeEnd = _resizeEnd;
       return true;
     }
     return false;
@@ -87,7 +60,7 @@ export function configureResizeItem(this: WCGantt) {
 
   const resetMovement = () => {
     resizeStart = false;
-    resizeEnd = false;
+    // resizeEnd = false;
     moving = false;
     barSvg = undefined;
     initialX = undefined;
@@ -125,7 +98,7 @@ export function configureResizeItem(this: WCGantt) {
 
     // initialBarSvgX = barSvg.x.baseVal.value;
 
-    item = this.settings.data.find((x) => x.id.toString() === itemId);
+    item = this.schedule.itemsIndex.get(itemId);
   };
 
   const onMouseMove = async (e: MouseEvent) => {
@@ -136,7 +109,7 @@ export function configureResizeItem(this: WCGantt) {
     const dir = e.movementX > 0 ? 1 : -1;
 
     const diff =
-      Math.abs(initialX - e.clientX) * this.settings.timeScale.msPerPx * dir;
+      Math.abs(initialX - e.clientX) * this.schedule.timeScale.msPerPx * dir;
 
     if (diff === 0) return;
 
@@ -144,12 +117,12 @@ export function configureResizeItem(this: WCGantt) {
 
     resizeItem(item, diff, resizeStart);
 
-    for (const itm of item.parents) {
-      if (resizeStart && item.start.getTime() === itm.start.getTime())
-        resizeItem(itm, diff, resizeStart);
-      if (resizeEnd && item.end.getTime() === itm.end.getTime())
-        resizeItem(itm, diff, resizeStart);
-    }
+    // for (const itm of item.parents) {
+    //   if (resizeStart && item.start.getTime() === itm.start.getTime())
+    //     resizeItem(itm, diff, resizeStart);
+    //   if (resizeEnd && item.end.getTime() === itm.end.getTime())
+    //     resizeItem(itm, diff, resizeStart);
+    // }
 
     initialX = e.clientX;
 

@@ -1,10 +1,9 @@
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import { ComponentSettings } from "../types";
-
-export function YearMonth(settings: ComponentSettings) {
-  const scale = settings.timeScale;
-  const currentDay = new Date(settings.start);
+import type { WCGantt } from "../WcGantt";
+export function YearMonth(this: WCGantt) {
+  const scale = this.schedule.timeScale;
+  const currentDay = this.schedule.timeScale.start;
   const ticks = [];
 
   const currentMonth = currentDay.getMonth();
@@ -16,7 +15,7 @@ export function YearMonth(settings: ComponentSettings) {
     1
   );
 
-  const textBaseLine = settings.scaleHeight * 0.25;
+  const textBaseLine = this.settings.scaleHeight * 0.25;
 
   let firstDayOfPrevMonthX = scale.dateToPx(firstDayOfNextMonth);
 
@@ -40,7 +39,7 @@ export function YearMonth(settings: ComponentSettings) {
           x1=${firstDayOfNextMonthX}
           x2=${firstDayOfNextMonthX}
           y1=${0}
-          y2=${settings.scaleHeight / 2}
+          y2=${this.settings.scaleHeight / 2}
           class="line"       
         />   
         

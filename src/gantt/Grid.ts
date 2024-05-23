@@ -1,18 +1,92 @@
 import { TemplateResult, svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import { ComponentSettings } from "../types";
-import type { WCGantt } from "../WcGantt";
-import { addDays, getWeeks } from "../utils";
 
-export function Grid(this: WCGantt, settings: ComponentSettings) {
+import type { WCGantt } from "../WcGantt";
+import { getWeeks } from "../utils";
+import type { CompiledSettings } from "../settings";
+import dayjs from "dayjs";
+
+export function Grid(this: WCGantt, settings: CompiledSettings) {
+  const getDayWeekends = () => {
+    const scale = this.schedule.timeScale;
+    const currentDay = new Date(scale.startMs);
+    const ticks = [];
+
+    const weekendRectH = settings.height;
+
+    for (let day = 0; day <= scale.totalDays - 1; day++) {
+      const dayOfWeek = currentDay.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const x = day * scale.pxPerDay;
+
+      if (isWeekend)
+        ticks.push({
+          id: currentDay.toDateString(),
+          tpl: svg`<rect x=${x} y=${0} width=${
+            scale.pxPerDay
+          } height=${weekendRectH} class="weekend" />`,
+        });
+
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
+
+    return svg`
+  <g id="weekends">
+    ${repeat(
+      ticks,
+      (i) => i.id,
+      (i) => i.tpl
+    )}   
+  </g>`;
+  };
+
+  const getWeekWeekends = () => {
+    const weeks = getWeeks(
+      this.schedule.timeScale.start,
+      this.schedule.timeScale.end
+    );
+
+    const ticks = [];
+    const y0 = 0;
+    const RH = settings.height;
+    const d = this.schedule.timeScale.pxPerDay;
+    const len = weeks.length - 1;
+
+    for (let i = 0; i < len; i++) {
+      const cur = new Date(weeks[i]);
+      const x = this.schedule.timeScale.dateToPx(cur);
+      const curDay = cur.getDate();
+      const prevDay = dayjs(cur).subtract(1, "day").toDate(); // addDays(cur, -1).getDate();
+      const id = "week_" + i + "_" + prevDay + "-" + curDay;
+
+      ticks.push({
+        id,
+        tpl: svg`      
+        <rect x=${x - d * 2} y=${y0} width=${
+          d * 2
+        } height=${RH} class="weekend"/>                 
+      `,
+      });
+    }
+    return svg`
+    <g id="weekends">
+      ${repeat(
+        ticks,
+        (i) => i.id,
+        (i) => i.tpl
+      )}     
+    </g>
+  `;
+  };
+
   const items: { id: number; tpl: TemplateResult }[] = [];
 
-  for (let i = 0; i < settings.data.length; i++) {
+  for (let i = 0; i < this.schedule.items.length; i++) {
     const y1 = (i + 1) * settings.rowHeight + settings.lineWidth;
     const y0 = i * settings.rowHeight + settings.lineWidth;
 
     let background = svg``;
-    const v = settings.data[i];
+    const v = Array.from(this.schedule.items.values())[i];
     if (v.type === "group")
       background = svg`
       <rect
@@ -35,100 +109,31 @@ export function Grid(this: WCGantt, settings: ComponentSettings) {
 
   let weekend: TemplateResult<2> = null;
 
-  if (this.settings.timeScale.viewMode === "week") {
-    weekend = getWeekWeekends(settings);
+  if (this.schedule.timeScale.viewMode === "week") {
+    weekend = getWeekWeekends();
   }
-  if (this.settings.timeScale.viewMode === "day") {
-    weekend = getDayWeekends(settings);
+  if (this.schedule.timeScale.viewMode === "day") {
+    weekend = getDayWeekends();
   }
 
   return svg`   
-    ${weekend}
-    <g id="grid">
-    
-      <line
-          QQ
-          x1=${0}
-          x2=${settings.width}
-          y1=${settings.lineWidth}
-          y2=${settings.lineWidth}
-          class="line"
-          
-        />
-      ${repeat(
-        items,
-        (i) => i.id,
-        (i) => i.tpl
-      )}           
-    </g>
-  `;
-}
-
-function getDayWeekends(settings: ComponentSettings) {
-  const scale = settings.timeScale;
-  const currentDay = new Date(scale.startMs);
-  const ticks = [];
-
-  const weekendRectH = settings.height;
-
-  for (let day = 0; day <= scale.totalDays - 1; day++) {
-    const dayOfWeek = currentDay.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    const x = day * scale.pxPerDay;
-
-    if (isWeekend)
-      ticks.push({
-        id: currentDay.toDateString(),
-        tpl: svg`<rect x=${x} y=${0} width=${
-          scale.pxPerDay
-        } height=${weekendRectH} class="weekend" />`,
-      });
-
-    currentDay.setDate(currentDay.getDate() + 1);
-  }
-
-  return svg`
-  <g id="weekends">
+  ${weekend}
+  <g id="grid">
+  
+    <line
+        QQ
+        x1=${0}
+        x2=${settings.width}
+        y1=${settings.lineWidth}
+        y2=${settings.lineWidth}
+        class="line"
+        
+      />
     ${repeat(
-      ticks,
+      items,
       (i) => i.id,
       (i) => i.tpl
-    )}   
-  </g>`;
-}
-
-function getWeekWeekends(settings: ComponentSettings) {
-  const weeks = getWeeks(settings.timeScale.start, settings.timeScale.end);
-
-  const ticks = [];
-  const y0 = 0;
-  const RH = settings.height;
-  const d = settings.timeScale.pxPerDay;
-  const len = weeks.length - 1;
-
-  for (let i = 0; i < len; i++) {
-    const cur = new Date(weeks[i]);
-    const x = settings.timeScale.dateToPx(cur);
-    const curDay = cur.getDate();
-    const prevDay = addDays(cur, -1).getDate();
-    const id = "week_" + i + "_" + prevDay + "-" + curDay;
-
-    ticks.push({
-      id,
-      tpl: svg`      
-        <rect x=${x - d * 2} y=${y0} width=${
-        d * 2
-      } height=${RH} class="weekend"/>                 
-      `,
-    });
-  }
-  return svg`
-    <g id="weekends">
-      ${repeat(
-        ticks,
-        (i) => i.id,
-        (i) => i.tpl
-      )}     
-    </g>
-  `;
+    )}           
+  </g>
+`;
 }

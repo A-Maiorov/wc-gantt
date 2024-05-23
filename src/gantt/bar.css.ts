@@ -10,6 +10,8 @@ export const barCss = css`
     --gantt-bar-group-front-fill: #299cb4;
     --gantt-bar-today-line-stroke: #f04134;
     --gantt-bar-today-line-stroke-width: 1px;
+    --gantt-bar-data-line-stroke: #06b9f1;
+    --gantt-bar-data-line-stroke-width: 1px;
     --gantt-bar-inner-border-color: var(--gantt-chart-bg-color);
     --gantt-bar-outer-border-color: var(--gantt-chart-bg-color);
     --gantt-critical-path-color: #2d22f5;
@@ -60,5 +62,15 @@ export const barCss = css`
   .today-line {
     stroke: var(--gantt-bar-today-line-stroke, #f04134);
     stroke-width: var(--gantt-bar-today-line-stroke-width, 1px);
+  }
+  .today-circle {
+    fill: var(--gantt-bar-today-line-stroke, #f04134);
+  }
+  .data-date-line {
+    stroke: var(--gantt-bar-data-line-stroke);
+    stroke-width: var(--gantt-bar-data-line-stroke-width, 1px);
+  }
+  .data-date-circle {
+    fill: var(--gantt-bar-data-line-stroke);
   }
 `;

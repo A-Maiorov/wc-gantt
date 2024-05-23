@@ -1,8 +1,10 @@
 import { svg } from "lit";
-import { ComponentSettings, Item } from "../types";
 
 import { repeat } from "lit/directives/repeat.js";
 import { WCGantt } from "../WcGantt";
+import type { CompiledSettings } from "../settings";
+import type { Item } from "../schedule";
+import dayjs from "dayjs";
 
 function renderMilestone(
   x: number,
@@ -47,23 +49,23 @@ function renderMilestone(
   `,
   };
 }
-export function getControlGap(settings: ComponentSettings) {
+export function getControlGap(settings: CompiledSettings) {
   return settings.rowHeight / 6; // 6;
 }
 
-export function Bar(this: WCGantt, settings: ComponentSettings) {
+export function Bar(this: WCGantt, settings: CompiledSettings) {
+  const dataDateX = this.schedule.timeScale.dateToPx(this.schedule.dataDate);
+
   const y0 = (settings.rowHeight - settings.barHeight) / 2;
 
-  const current = settings.timeScale.dateToPx(
-    new Date(new Date().setHours(1, 0, 0, 0))
+  const todayX = this.schedule.timeScale.dateToPx(
+    new Date(new Date().setHours(0, 0, 0, 0))
   ); // x0 + (current - settings.minTime) / settings.unitMs;
 
-  const scale = settings.timeScale;
+  const scale = this.schedule.timeScale;
 
-  const bars = settings.data.map((v, i) => {
+  const bars = this.schedule.items.map((v, i) => {
     const id = "bar_" + v.id;
-
-    if (!v.start || !v.end) return null;
 
     const handler = () => {
       if (this.suppressClick) return;
@@ -71,7 +73,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
       const ev = new CustomEvent<Item>("item-click", { detail: v });
       this.dispatchEvent(ev);
     };
-    const x = scale.dateToPx(v.start);
+    const x = scale.dateToPx(v.earlyStart);
 
     let y = y0 + i * settings.rowHeight;
     const grHeight = settings.barHeight / 3;
@@ -83,23 +85,27 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
       return renderMilestone(x, y, settings.barHeight, handler, id, v);
     }
 
-    const w1 = scale.pxForTimeSpan(v.start, v.end);
-    const w2 = w1 * v.percent;
+    const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
+
+    const progressDate = dayjs(v.earlyStart)
+      .add(v.progressDays, "days")
+      .toDate();
+    const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
     let barCss = "gantt-bar";
     barCss += v.type === "group" ? " group" : "";
 
     let warning = false;
     let danger = false;
-    if (settings.showDelay) {
-      if (x + w2 < current && v.percent < 0.999999) {
-        warning = true;
-        danger = false;
-      }
-      if (x + w1 < current && v.percent < 0.999999) {
-        warning = false;
-        danger = true;
-      }
-    }
+    // if (settings.showDelay) {
+    //   if (x + w2 < todayX && v.percentCompletion < 0.999999) {
+    //     warning = true;
+    //     danger = false;
+    //   }
+    //   if (x + w1 < todayX && v.percentCompletion < 0.999999) {
+    //     warning = false;
+    //     danger = true;
+    //   }
+    // }
 
     const controlRadius = settings.rowHeight / 6; // 6;
     const controlGap = getControlGap(settings); // 6;
@@ -212,6 +218,35 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
         </g>
       `;
 
+    let barDataDate = svg``;
+    if (
+      v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
+      v.isStarted
+    ) {
+      const barDataDateX = this.schedule.timeScale.dateToPx(v.dataDate);
+      const leftY = i * settings.rowHeight;
+      const centerY = leftY + settings.rowHeight / 2;
+
+      barDataDate = svg`
+          <line             
+            x1=${dataDateX}
+            x2=${barDataDateX}
+            y1=${leftY}
+            y2=${centerY}
+            class="data-date-line"
+          />
+          <line             
+          x1=${barDataDateX}
+          x2=${dataDateX}
+          y1=${centerY}
+          y2=${leftY}
+          class="data-date-line"
+        />
+        `;
+
+      //dataDateX
+    }
+
     return {
       id,
       tpl: svg` 
@@ -226,7 +261,7 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
         ?warning=${warning}
         ?danger=${danger}
       >     
-       
+        ${barDataDate}
         ${backBar}
         ${frontBar}
         ${barBorder}
@@ -246,10 +281,29 @@ export function Bar(this: WCGantt, settings: ComponentSettings) {
 
   return svg`
     <g>      
+        <circle
+          class="data-date-circle"          
+          cx=${dataDateX}
+          cy="2"
+          r="2"
+        />                
         <line             
-          x1=${current}
-          x2=${current}
-          y1=${0}
+          x1=${dataDateX}
+          x2=${dataDateX}
+          y1="0"
+          y2=${settings.height}
+          class="data-date-line"
+        />
+        <circle
+          class="today-circle"          
+          cx=${todayX}
+          cy="2"
+          r="2"
+        />                
+        <line             
+          x1=${todayX}
+          x2=${todayX}
+          y1="0"
           y2=${settings.height}
           class="today-line"
         />

@@ -1,5 +1,9 @@
 import { type WCGantt } from "./WcGantt";
-import { Link, LinkAddedEvArgs } from "./types";
+import type { IDependency } from "./schedule";
+export type LinkAddedEvArgs = {
+  link: IDependency;
+  cancel: () => void;
+};
 
 export function configureAddLink(this: WCGantt) {
   const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
@@ -17,8 +21,8 @@ export function configureAddLink(this: WCGantt) {
     const eid = e.dataset["id"];
     if (sid === eid) return;
 
-    const startNode = this.settings.data.find((t) => t.id.toString() === sid);
-    const endNode = this.settings.data.find((t) => t.id.toString() === eid);
+    const startNode = this.schedule.itemsIndex.get(sid);
+    const endNode = this.schedule.itemsIndex.get(eid);
 
     let startType = isStart(s) ? "S" : "F";
     let endType = isStart(e) ? "S" : "F";
@@ -31,24 +35,16 @@ export function configureAddLink(this: WCGantt) {
     }
 
     const link = {
-      source: sid,
-      target: eid,
+      predecessor: sid,
+      successor: eid,
       type: `${startType}${endType}`,
-    } as Link;
+      lag: 0,
+    } as IDependency;
 
-    //  const startItem = this.settings.data.find((x) => x.id == sid);
-
-    const existingLink = this.settings.links.find(
-      (x) => x.source === sid && x.target === eid
+    const existingLink = this.schedule.dependencies.find(
+      (x) => x.predecessor === sid && x.successor === eid
     );
 
-    // if (startItem) {
-    //   const existingLink = startItem.links.find(
-    //     (l) =>
-    //       l.source === link.source &&
-    //       l.target === link.target &&
-    //       l.type === link.type
-    //   );
     if (existingLink) return;
 
     let isCanceled = false;
@@ -65,16 +61,16 @@ export function configureAddLink(this: WCGantt) {
     this.dispatchEvent(ev);
 
     if (!isCanceled) {
-      this.settings.links.push(link);
+      this.schedule.dependencies.push(link);
       this.requestUpdate();
     }
-    // }
   };
 
   const NS = "http://www.w3.org/2000/svg";
   let moving = false;
   let start: SVGCircleElement = null;
   let line: SVGLineElement = null;
+  let hideFinish: boolean = false;
 
   const getControlX = (ctl: SVGCircleElement) => {
     const svgBar = ctl.parentElement as unknown as SVGSVGElement;
@@ -96,13 +92,28 @@ export function configureAddLink(this: WCGantt) {
     }
     e.preventDefault();
     start = e.target as SVGCircleElement;
+
+    const isDependencyStart = isStart(start);
+    hideFinish = this.settings.disableSF && isDependencyStart;
     //const svgBar = start.parentElement as unknown as SVGSVGElement;
 
-    this.shadowRoot
-      .querySelectorAll(".activity.ctl-start,.activity.ctl-finish")
-      .forEach((elem) => {
-        (elem as HTMLElement).setAttribute("active", "active");
-      });
+    if (hideFinish) {
+      this.shadowRoot
+        .querySelectorAll<SVGCircleElement>(".activity.ctl-finish")
+        .forEach((e) => e.toggleAttribute("disabled", true));
+    }
+
+    const potentialTargets = hideFinish
+      ? this.shadowRoot.querySelectorAll<SVGCircleElement>(
+          ".activity.ctl-start"
+        )
+      : this.shadowRoot.querySelectorAll<SVGCircleElement>(
+          ".activity.ctl-start,.activity.ctl-finish"
+        );
+
+    potentialTargets.forEach((elem) => {
+      elem.toggleAttribute("active", true);
+    });
     moving = true;
     line = document.createElementNS(NS, "line");
     const x = getControlX(start).toString(); //$start.getAttribute("cx");
@@ -141,9 +152,10 @@ export function configureAddLink(this: WCGantt) {
     e.stopPropagation();
 
     this.shadowRoot
-      .querySelectorAll(".ctl-start,.ctl-finish")
+      .querySelectorAll<SVGCircleElement>(".ctl-start,.ctl-finish")
       .forEach((elem) => {
-        (elem as HTMLElement).removeAttribute("active");
+        elem.toggleAttribute("active", false);
+        elem.toggleAttribute("disabled", false);
       });
     moving = false;
 
@@ -158,13 +170,23 @@ export function configureAddLink(this: WCGantt) {
 
     const target = e.target as SVGCircleElement;
     const isCtrl = isStart(target) || isFinish(target);
+
+    if (hideFinish && isFinish(target)) {
+      start = null;
+      hideFinish = false;
+      return;
+    }
+
     if (start && isCtrl) {
       addLink(start, target);
     }
     start = null;
+    hideFinish = false;
   });
 
   this.addEventListener("mouseout", (e) => {
     resetMovingControls(e);
+    start = null;
+    hideFinish = false;
   });
 }

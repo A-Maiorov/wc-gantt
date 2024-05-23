@@ -1,6 +1,6 @@
 {
   "name": "wc-gantt",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "description": "Gantt chart web component",
   "main": "dist/WcGantt.js",
   "type": "module",
@@ -34,6 +34,9 @@
     "lit": "3.x"
   },
   "dependencies": {
+    "dayjs": "1.11.11"
+  },
+  "devDependencies": {
     "esbuild": "0.21.3",
     "esbuild-plugin-minify-html-literals": "2.0.0",
     "esbuild-plugin-lit-css": "3.0.0",

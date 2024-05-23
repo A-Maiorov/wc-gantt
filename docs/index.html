@@ -37,7 +37,7 @@
         <label for="showLinks">Show Links</label>
       </div>
       <div>
-        <input type="checkbox" id="showDelay" checked>
+        <input type="checkbox" id="showDelay" >
         <label for="showDelay">Show Delay</label>
       </div>
     </div>
@@ -51,18 +51,26 @@
     function ready() {
 
       window.opts = {
-        viewMode: "week",
-        showCriticalPath: true
+        showDelay: false,
+        disableSF: true,
+        timeScaleMode: "week",
+        showCriticalPath: true,
+        startDate: new Date( new Date().setDate(new Date().getDate() - 4)),
+        dataDate:new Date( new Date().setDate(new Date().getDate() - 2)),
       };
 
       const wcGantt = document.querySelector("wc-gantt");
-      wcGantt.data= window.data;
-      wcGantt.links= window.links;
+      wcGantt.items= window.data;
+      wcGantt.dependencies= window.links;
       wcGantt.options = window.opts;
 
       wcGantt.addEventListener("item-click", (i) => {
         console.log(i);
       });
+      wcGantt.addEventListener("dependency-click", (i) => {
+        console.log(i);
+      });
+      
       wcGantt.addEventListener("item-moved", (i) => {
         console.log(i);
       });
@@ -80,8 +88,8 @@
 
       const viewModeEl = document.querySelector("#viewMode");
       viewModeEl.onchange = (e) => {
-        const viewMode = e.target.value;
-        changeOptions({ viewMode });
+        const timeScaleMode = e.target.value;
+        changeOptions({ timeScaleMode });
       };
 
       const showLinksEl =document.querySelector("#showLinks");

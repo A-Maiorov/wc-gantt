@@ -2,9 +2,9 @@ import { svg } from "lit";
 import { getDates } from "../utils";
 import { Year } from "./Year";
 import { repeat } from "lit/directives/repeat.js";
-import { ComponentSettings } from "../types";
+import type { WCGantt } from "../WcGantt";
 
-export function MonthHeader(settings: ComponentSettings) {
+export function MonthHeader(this: WCGantt) {
   const MONTH = [
     "Jan",
     "Feb",
@@ -20,13 +20,13 @@ export function MonthHeader(settings: ComponentSettings) {
     "Dec",
   ];
   const dates = getDates(
-    settings.timeScale.startMs,
-    settings.timeScale.end.getTime()
+    this.schedule.timeScale.startMs,
+    this.schedule.timeScale.end.getTime()
   );
   const months = dates.filter((v) => new Date(v).getDate() === 1);
 
-  months.unshift(settings.timeScale.startMs);
-  months.push(settings.timeScale.end.getTime());
+  months.unshift(this.schedule.timeScale.startMs);
+  months.push(this.schedule.timeScale.end.getTime());
 
   const ticks = [];
   const len = months.length - 1;
@@ -34,8 +34,8 @@ export function MonthHeader(settings: ComponentSettings) {
   for (let i = 0; i < len; i++) {
     const cur = new Date(months[i]);
     const month = cur.getMonth();
-    const x = settings.timeScale.dateToPx(new Date(months[i]));
-    const t = (months[i + 1] - months[i]) / settings.timeScale.msPerPx;
+    const x = this.schedule.timeScale.dateToPx(new Date(months[i]));
+    const t = (months[i + 1] - months[i]) / this.schedule.timeScale.msPerPx;
     const id = "hm_" + month;
     const textX = x + t / 2;
 
@@ -44,8 +44,8 @@ export function MonthHeader(settings: ComponentSettings) {
       <line
         x1=${x}
         x2=${x}
-        y1=${settings.scaleHeight / 2}
-        y2=${settings.scaleHeight}
+        y1=${this.settings.scaleHeight / 2}
+        y2=${this.settings.scaleHeight}
         class="line"       
       />    
       `;
@@ -58,7 +58,9 @@ export function MonthHeader(settings: ComponentSettings) {
         ${
           t > 30
             ? svg`
-          <text x=${textX} y=${settings.scaleHeight * 0.75} class="text small">
+          <text x=${textX} y=${
+                this.settings.scaleHeight * 0.75
+              } class="text small">
             ${MONTH[month]}
           </text>`
             : null
@@ -71,12 +73,12 @@ export function MonthHeader(settings: ComponentSettings) {
   const years = months.filter((v) => new Date(v).getMonth() === 0);
   return svg`
     <g id="monthHeader">
-      ${Year(years, settings)}     
+      ${Year.bind(this)(years)}     
       <line
         x1=${0}
-        x2=${settings.width}
-        y1=${settings.scaleHeight / 2}
-        y2=${settings.scaleHeight / 2}
+        x2=${this.settings.width}
+        y1=${this.settings.scaleHeight / 2}
+        y2=${this.settings.scaleHeight / 2}
         class="line"
         
       />
