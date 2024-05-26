@@ -3,8 +3,8 @@ export const barCss = css`
   :host {
     --gantt-milestone-color: #d33daf;
     --gantt-bar-back-fill: #65c16f;
-    --gantt-bar-warning-back-fill: #faad14;
-    --gantt-bar-danger-back-fill: #f5222d;
+    /* --gantt-bar-warning-back-fill: #faad14;
+    --gantt-bar-danger-back-fill: #f5222d; */
     --gantt-bar-front-fill: #46ad51;
     --gantt-bar-group-back-fill: #3db9d3;
     --gantt-bar-group-front-fill: #299cb4;

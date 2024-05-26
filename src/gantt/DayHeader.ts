@@ -1,10 +1,10 @@
 import { YearMonth } from "./YearMonth";
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 
-export function DayHeader(this: WCGantt) {
-  const scale = this.schedule.timeScale;
+export function DayHeader(this: WcGantt) {
+  const scale = this.timeScale;
   const currentDay = new Date(scale.startMs);
   const ticks = [];
 

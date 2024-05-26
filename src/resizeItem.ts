@@ -1,4 +1,4 @@
-import { type WCGantt } from "./WcGantt";
+import { type WcGantt } from "./WcGantt";
 import type { Item } from "./schedule";
 
 import { MsInDAY } from "./utils";
@@ -24,7 +24,7 @@ export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
     }
   }
 };
-export function configureResizeItem(this: WCGantt) {
+export function configureResizeItem(this: WcGantt) {
   svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
   // timeScale = this.settings.timeScale;
   let moving = false;
@@ -108,8 +108,7 @@ export function configureResizeItem(this: WCGantt) {
 
     const dir = e.movementX > 0 ? 1 : -1;
 
-    const diff =
-      Math.abs(initialX - e.clientX) * this.schedule.timeScale.msPerPx * dir;
+    const diff = Math.abs(initialX - e.clientX) * this.timeScale.msPerPx * dir;
 
     if (diff === 0) return;
 

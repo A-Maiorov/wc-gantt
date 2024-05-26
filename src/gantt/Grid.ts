@@ -1,14 +1,14 @@
 import { TemplateResult, svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
 
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 import { getWeeks } from "../utils";
 import type { CompiledSettings } from "../settings";
 import dayjs from "dayjs";
 
-export function Grid(this: WCGantt, settings: CompiledSettings) {
+export function Grid(this: WcGantt, settings: CompiledSettings) {
   const getDayWeekends = () => {
-    const scale = this.schedule.timeScale;
+    const scale = this.timeScale;
     const currentDay = new Date(scale.startMs);
     const ticks = [];
 
@@ -41,20 +41,17 @@ export function Grid(this: WCGantt, settings: CompiledSettings) {
   };
 
   const getWeekWeekends = () => {
-    const weeks = getWeeks(
-      this.schedule.timeScale.start,
-      this.schedule.timeScale.end
-    );
+    const weeks = getWeeks(this.timeScale.start, this.timeScale.end);
 
     const ticks = [];
     const y0 = 0;
     const RH = settings.height;
-    const d = this.schedule.timeScale.pxPerDay;
+    const d = this.timeScale.pxPerDay;
     const len = weeks.length - 1;
 
     for (let i = 0; i < len; i++) {
       const cur = new Date(weeks[i]);
-      const x = this.schedule.timeScale.dateToPx(cur);
+      const x = this.timeScale.dateToPx(cur);
       const curDay = cur.getDate();
       const prevDay = dayjs(cur).subtract(1, "day").toDate(); // addDays(cur, -1).getDate();
       const id = "week_" + i + "_" + prevDay + "-" + curDay;
@@ -109,10 +106,10 @@ export function Grid(this: WCGantt, settings: CompiledSettings) {
 
   let weekend: TemplateResult<2> = null;
 
-  if (this.schedule.timeScale.viewMode === "week") {
+  if (this.timeScale.viewMode === "week") {
     weekend = getWeekWeekends();
   }
-  if (this.schedule.timeScale.viewMode === "day") {
+  if (this.timeScale.viewMode === "day") {
     weekend = getDayWeekends();
   }
 

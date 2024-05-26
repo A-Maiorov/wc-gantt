@@ -17,7 +17,7 @@ export function createRoundedPathString(p: number[][]) {
   else pathCoords[lastInd].x -= curveRadius / 2;
 
   for (let i = 0; i < pathCoords.length; i++) {
-    // 1. Get current coord and the next two (startpoint, cornerpoint, endpoint) to calculate rounded curve
+    // 1. Get current coord and the next two (start point, corner point, endpoint) to calculate rounded curve
     const c2Index = i + 1 > lastInd ? (i + 1) % pathCoords.length : i + 1;
     const c3Index = i + 2 > lastInd ? (i + 2) % pathCoords.length : i + 2;
 
@@ -58,7 +58,7 @@ export function createRoundedPathString(p: number[][]) {
             1
           ),
         ];
-        // Bezier line around curve (Q controlcoord endcoord)
+        // Bezier line around curve (Q control-coord end-coord)
         path.push("Q" + c2.x + "," + c2.y + "," + c2c3CurvePoint.join(","));
       }
     }

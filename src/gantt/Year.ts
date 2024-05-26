@@ -1,16 +1,16 @@
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 
-export function Year(this: WCGantt, years: number[]) {
-  years.unshift(this.schedule.timeScale.startMs);
-  years.push(this.schedule.timeScale.end.getTime());
+export function Year(this: WcGantt, years: number[]) {
+  years.unshift(this.timeScale.startMs);
+  years.push(this.timeScale.end.getTime());
   const ticks = [];
 
-  let currYear = this.schedule.timeScale.start.getFullYear();
-  const lastYear = this.schedule.timeScale.end.getFullYear();
+  let currYear = this.timeScale.start.getFullYear();
+  const lastYear = this.timeScale.end.getFullYear();
   let currX1 = 0;
-  const maxPx = this.schedule.timeScale.dateToPx(this.schedule.timeScale.end);
+  const maxPx = this.timeScale.dateToPx(this.timeScale.end);
 
   const oneFourthScaleH = this.settings.scaleHeight / 4;
   const y = 0;
@@ -18,7 +18,7 @@ export function Year(this: WCGantt, years: number[]) {
 
   while (currYear <= lastYear) {
     const nextYear = new Date(currYear + 1, 0, 1, 1);
-    let currX2 = this.schedule.timeScale.dateToPx(nextYear);
+    let currX2 = this.timeScale.dateToPx(nextYear);
     if (currX2 > maxPx) currX2 = maxPx;
     ticks.push({
       id: "y_" + currYear,

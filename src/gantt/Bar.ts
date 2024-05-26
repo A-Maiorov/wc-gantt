@@ -1,7 +1,7 @@
 import { svg } from "lit";
 
 import { repeat } from "lit/directives/repeat.js";
-import { WCGantt } from "../WcGantt";
+import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
 import type { Item } from "../schedule";
 import dayjs from "dayjs";
@@ -53,16 +53,16 @@ export function getControlGap(settings: CompiledSettings) {
   return settings.rowHeight / 6; // 6;
 }
 
-export function Bar(this: WCGantt, settings: CompiledSettings) {
-  const dataDateX = this.schedule.timeScale.dateToPx(this.schedule.dataDate);
+export function Bar(this: WcGantt, settings: CompiledSettings) {
+  const dataDateX = this.timeScale.dateToPx(this.schedule.dataDate);
 
   const y0 = (settings.rowHeight - settings.barHeight) / 2;
 
-  const todayX = this.schedule.timeScale.dateToPx(
+  const todayX = this.timeScale.dateToPx(
     new Date(new Date().setHours(0, 0, 0, 0))
   ); // x0 + (current - settings.minTime) / settings.unitMs;
 
-  const scale = this.schedule.timeScale;
+  const scale = this.timeScale;
 
   const bars = this.schedule.items.map((v, i) => {
     const id = "bar_" + v.id;
@@ -223,7 +223,7 @@ export function Bar(this: WCGantt, settings: CompiledSettings) {
       v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
       v.isStarted
     ) {
-      const barDataDateX = this.schedule.timeScale.dateToPx(v.dataDate);
+      const barDataDateX = this.timeScale.dateToPx(v.dataDate);
       const leftY = i * settings.rowHeight;
       const centerY = leftY + settings.rowHeight / 2;
 

@@ -1,11 +1,11 @@
-import { type WCGantt } from "./WcGantt";
+import { type WcGantt } from "./WcGantt";
 import type { IDependency } from "./schedule";
 export type LinkAddedEvArgs = {
   link: IDependency;
   cancel: () => void;
 };
 
-export function configureAddLink(this: WCGantt) {
+export function configureAddLink(this: WcGantt) {
   const svg = this.shadowRoot.getElementById("gantt") as unknown as SVGElement;
 
   function isStart(el: SVGCircleElement) {

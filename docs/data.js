@@ -9,8 +9,8 @@ const data = [
         nested: [
           {
             id: "111",
-            duration: 25,
-            name: "1.1.1 ____ Activity",
+            duration: 5,
+            name: "1.1.1   Activity",
           },
           {
             id: "112",

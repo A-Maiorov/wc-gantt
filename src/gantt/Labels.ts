@@ -1,9 +1,9 @@
 import { svg, type TemplateResult } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 import type { Item } from "../schedule";
 
-export function Labels(this: WCGantt) {
+export function Labels(this: WcGantt) {
   const handler = (v: Item) => {
     const ev = new CustomEvent<Item>("item-click", { detail: v });
     this.dispatchEvent(ev);

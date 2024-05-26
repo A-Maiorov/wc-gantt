@@ -11,16 +11,29 @@ import { configureAddLink } from "./addLink";
 import { configureResizeItem } from "./resizeItem";
 // import { findLongestPath } from "./criticalPath";
 import { WcGanttSettings, type CompiledSettings } from "./settings";
+
 import {
   Schedule,
   type DependencyType,
   type IDependency,
   type IItem,
 } from "./schedule";
+import { TimeScale } from "./timeScale";
+import dayjs from "dayjs";
+
+export { WcGanttSettings } from "./settings";
+export {
+  Item,
+  DependencyType,
+  IDependency,
+  IItem,
+  Schedule,
+  ItemType,
+} from "./schedule";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wc-gantt": WCGantt;
+    "wc-gantt": WcGantt;
   }
 }
 
@@ -34,7 +47,7 @@ declare global {
  * @fires item-moved CustomEvent : Item
  */
 @customElement("wc-gantt")
-export class WCGantt extends LitElement {
+export class WcGantt extends LitElement {
   static styles = [
     css`
       svg {
@@ -97,6 +110,7 @@ export class WCGantt extends LitElement {
         clip-path: inset(0px -20px 0px 0px);
         flex-shrink: 0;
         z-index: 1;
+        overflow: hidden;
       }
     `,
     layoutCss,
@@ -107,6 +121,8 @@ export class WCGantt extends LitElement {
 
   settings: CompiledSettings;
   schedule: Schedule;
+
+  timeScale: TimeScale;
 
   private updateSettings() {
     const rowHeight = parseFloat(
@@ -141,11 +157,57 @@ export class WCGantt extends LitElement {
     this.schedule = new Schedule(
       this.settings.startDate,
       this.settings.dataDate,
-      this.items,
-      this.dependencies
+      this.items ?? [],
+      this.dependencies ?? []
     );
+    this.updateLabelsWidth();
+    this.updateWidth();
+    this.settings.height = this.schedule.items.length * this.settings.rowHeight;
 
+    this.timeScale = new TimeScale(
+      dayjs(this.settings.startDate).subtract(5, "days").toDate(),
+      this.schedule.endDate,
+      this.settings.timeScaleMode
+    );
+    this.updateTimeScaleEndDate();
     this.setupInteractions();
+  }
+
+  private updateWidth() {
+    const bcr = this.getBoundingClientRect();
+
+    // TODO : COnTINUE HERE => take MAX of  data width or viewPort width
+
+    this.settings.width =
+      bcr.width -
+      this.settings.labelsWidth -
+      (bcr.right - bcr.width) -
+      bcr.left;
+
+    if (this.timeScale) {
+      const dataBasedWidth = this.timeScale.totalDays * this.timeScale.pxPerDay;
+      if (dataBasedWidth > this.settings.width)
+        this.settings.width = dataBasedWidth;
+    }
+  }
+
+  private updateTimeScaleEndDate() {
+    const maxDateBasedOnWidth = new TimeScale(
+      this.settings.startDate,
+      this.settings.startDate,
+      this.settings.timeScaleMode
+    )
+      .pxToDate(this.settings.width)
+      .setHours(0, 0, 0, 0);
+
+    const maxDateBasedOnData = dayjs(this.schedule.endDate)
+      .add(7, "days")
+      .toDate()
+      .getTime();
+
+    this.timeScale.end = new Date(
+      new Date(Math.max(maxDateBasedOnData, maxDateBasedOnWidth))
+    );
   }
 
   ___lastMovement: number = 0;
@@ -240,24 +302,38 @@ export class WCGantt extends LitElement {
       characterData: true,
     };
 
-    const getLabelsWidth = () => {
-      const r = (el as HTMLElement).getBoundingClientRect();
-
-      const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
-      this.settings.labelsWidth = w;
-      this.timeScaleMarginElement.style.width = w + "px";
-      const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
-
-      this.timeScaleElement.style.marginRight =
-        ganttV.offsetWidth - ganttV.clientWidth + "px";
+    const updateLabelsWidth = () => {
+      this.updateLabelsWidth();
+      this.updateWidth();
       this.requestUpdate();
     };
 
-    const obs = new MutationObserver(getLabelsWidth);
+    const obs = new MutationObserver(updateLabelsWidth);
     obs.observe(el, config);
     if (el.shadowRoot) obs.observe(el.shadowRoot, config);
-    getLabelsWidth();
+    updateLabelsWidth();
+
     this.scrollReady = true;
+  }
+  protected updateLabelsWidth() {
+    const el = this.renderRoot
+      .querySelector<HTMLSlotElement>("slot[data-labels]")
+      ?.assignedElements({ flatten: true })[0];
+    if (!el) return;
+
+    const r = (el as HTMLElement).getBoundingClientRect();
+
+    const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
+    this.settings.labelsWidth = w;
+    this.updateWidth();
+    this.updateTimeScaleEndDate();
+
+    const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
+
+    this.timeScaleMarginElement.style.width = w + "px";
+
+    this.timeScaleElement.style.marginRight =
+      ganttV.offsetWidth - ganttV.clientWidth + "px";
   }
 
   protected willUpdate(_changedProperties: Map<PropertyKey, unknown>): void {
@@ -273,10 +349,7 @@ export class WCGantt extends LitElement {
     if (this.settings.showCriticalPath) {
       this.schedule.updateCriticalPath();
     }
-
-    this.settings.width =
-      this.schedule.timeScale.totalDays * this.schedule.timeScale.pxPerDay;
-    this.settings.height = this.schedule.items.length * this.settings.rowHeight;
+    this.updateTimeScaleEndDate();
 
     this.updateComplete.then(() => {
       this.configureDependencyClick();

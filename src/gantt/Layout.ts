@@ -1,7 +1,7 @@
 import { svg } from "lit";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 
-export function Layout(this: WCGantt) {
+export function Layout(this: WcGantt) {
   return svg`
     <g id="layout">
     

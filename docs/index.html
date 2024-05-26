@@ -35,11 +35,7 @@
       <div>
         <input type="checkbox" id="showLinks" checked>
         <label for="showLinks">Show Links</label>
-      </div>
-      <div>
-        <input type="checkbox" id="showDelay" >
-        <label for="showDelay">Show Delay</label>
-      </div>
+      </div>     
     </div>
   </wc-gantt>
   <!-- <script type="module" async src="https://unpkg.com/wc-gantt"></script> -->
@@ -51,7 +47,7 @@
     function ready() {
 
       window.opts = {
-        showDelay: false,
+        
         disableSF: true,
         timeScaleMode: "week",
         showCriticalPath: true,
@@ -94,15 +90,15 @@
 
       const showLinksEl =document.querySelector("#showLinks");
       showLinksEl.onchange = () => {
-        const showLinks = showLinksEl.checked;
-        changeOptions({ showLinks });
+        const showDependencies = showLinksEl.checked;
+        changeOptions({ showDependencies });
       };
 
-      const showDelayEl = document.querySelector("#showDelay");
-      showDelayEl.onchange = () => {
-        const showDelay = showDelayEl.checked;
-        changeOptions({ showDelay });
-      };
+      // const showDelayEl = document.querySelector("#showDelay");
+      // showDelayEl.onchange = () => {
+      //   const showDelay = showDelayEl.checked;
+      //   changeOptions({ showDelay });
+      // };
 
 
     }

@@ -2,26 +2,23 @@ import { svg } from "lit";
 import { getWeekNumber, getWeeks } from "../utils";
 import { YearMonth } from "./YearMonth";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 import dayjs from "dayjs";
 
-export function WeekHeader(this: WCGantt) {
-  const weeks = getWeeks(
-    this.schedule.timeScale.start,
-    this.schedule.timeScale.end
-  );
+export function WeekHeader(this: WcGantt) {
+  const weeks = getWeeks(this.timeScale.start, this.timeScale.end);
 
   const ticks = [];
   //const y0 = settings.scaleHeight;
   //const RH = settings.height - y0;
-  const d = this.schedule.timeScale.pxPerDay;
+  const d = this.timeScale.pxPerDay;
   const len = weeks.length - 1;
 
   const oneFourthScaleH = this.settings.scaleHeight / 4;
 
   for (let i = 0; i < len; i++) {
     const cur = new Date(weeks[i]);
-    const x = this.schedule.timeScale.dateToPx(cur);
+    const x = this.timeScale.dateToPx(cur);
     const curDay = cur.getDate();
     const prevDay = dayjs(cur).subtract(1, "day").toDate().getDate(); // addDays(cur, -1).getDate();
     const id = "week_" + i + "_" + prevDay + "-" + curDay;

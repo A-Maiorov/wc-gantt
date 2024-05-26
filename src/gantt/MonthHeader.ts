@@ -2,9 +2,9 @@ import { svg } from "lit";
 import { getDates } from "../utils";
 import { Year } from "./Year";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 
-export function MonthHeader(this: WCGantt) {
+export function MonthHeader(this: WcGantt) {
   const MONTH = [
     "Jan",
     "Feb",
@@ -19,14 +19,11 @@ export function MonthHeader(this: WCGantt) {
     "Nov",
     "Dec",
   ];
-  const dates = getDates(
-    this.schedule.timeScale.startMs,
-    this.schedule.timeScale.end.getTime()
-  );
+  const dates = getDates(this.timeScale.startMs, this.timeScale.end.getTime());
   const months = dates.filter((v) => new Date(v).getDate() === 1);
 
-  months.unshift(this.schedule.timeScale.startMs);
-  months.push(this.schedule.timeScale.end.getTime());
+  months.unshift(this.timeScale.startMs);
+  months.push(this.timeScale.end.getTime());
 
   const ticks = [];
   const len = months.length - 1;
@@ -34,8 +31,8 @@ export function MonthHeader(this: WCGantt) {
   for (let i = 0; i < len; i++) {
     const cur = new Date(months[i]);
     const month = cur.getMonth();
-    const x = this.schedule.timeScale.dateToPx(new Date(months[i]));
-    const t = (months[i + 1] - months[i]) / this.schedule.timeScale.msPerPx;
+    const x = this.timeScale.dateToPx(new Date(months[i]));
+    const t = (months[i + 1] - months[i]) / this.timeScale.msPerPx;
     const id = "hm_" + month;
     const textX = x + t / 2;
 

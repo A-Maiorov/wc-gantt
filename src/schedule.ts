@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { TimeScale } from "./timeScale";
 import { findLongestPath } from "./criticalPath";
 export type ItemType = "activity" | "group" | "milestone" | "buffer";
 export interface IDependency {
@@ -14,10 +13,10 @@ export interface IItem {
   id: string;
   name: string;
   duration: number;
-  type: ItemType;
-  progressDays: number;
-  dataDate: Date;
-  nested: IItem[];
+  type?: ItemType;
+  progressDays?: number;
+  dataDate?: Date;
+  nested?: IItem[];
 }
 
 export class Item implements IItem {
@@ -40,7 +39,7 @@ export class Item implements IItem {
     );
   }
   set dataDate(v: Date) {
-    this._dataDate = v;
+    this._dataDate = new Date(v.setHours(0, 0, 0, 0));
   }
   private _duration: number = 14;
   public get duration() {
@@ -165,7 +164,6 @@ export class Schedule {
   itemsIndex: Map<string, Item>;
   items: Item[];
   dependencies: IDependency[];
-  timeScale: TimeScale;
 
   constructor(
     startDate: Date,
@@ -184,32 +182,51 @@ export class Schedule {
     });
 
     this.dependencies = dependencies;
-    this.updateTimeScale();
   }
 
-  private updateTimeScale() {
-    this.timeScale = new TimeScale(
-      dayjs(this.startDate).subtract(5, "days").toDate(),
-      dayjs(Math.max(...this.items.map((x) => x.earlyFinish.getTime())))
-        .add(7, "days")
-        .toDate(),
-      "week"
-    );
+  get endDate() {
+    return dayjs(
+      Math.max(...this.items.map((x) => x.earlyFinish.getTime()))
+    ).toDate();
   }
+
+  private readonly __nonGroups = [
+    "activity",
+    "buffer",
+    "milestone",
+  ] as ItemType[];
 
   private _flattenItems(items: IItem[]): Item[] {
     const flatArray: Item[] = [];
 
-    items.forEach((item) => {
+    for (const item of items) {
       const i = new Item(this);
-      Object.assign(i, item);
+
+      i.id = item.id;
+      i.name = item.name;
       flatArray.push(i);
-      if (item.nested) {
+
+      if (
+        item.type === "group" ||
+        (item.nested &&
+          Array.isArray(item.nested) &&
+          !this.__nonGroups.includes(item.type))
+      ) {
+        i.nested = [];
         i.type = "group";
-        i.nested = this._flattenItems(item.nested);
+        i.nested = this._flattenItems(item.nested ?? []);
         flatArray.push(...i.nested);
+      } else {
+        i.dataDate = item.dataDate;
+        i.duration =
+          item.duration != undefined && item.duration > 0
+            ? item.duration
+            : i.duration;
+
+        i.progressDays = item.progressDays ?? 0;
+        i.type = this.__nonGroups.includes(item.type) ? item.type : "activity";
       }
-    });
+    }
 
     return flatArray;
   }
@@ -237,7 +254,5 @@ export class Schedule {
     for (const i of this.items) {
       i.crit = critItems.includes(i.id);
     }
-
-    this.updateTimeScale();
   }
 }

@@ -8,10 +8,10 @@ import { Grid } from "./Grid";
 import { LinkLines } from "./LinkLines";
 import { Bar } from "./Bar";
 import { svg } from "lit";
-import { WCGantt } from "../WcGantt";
+import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
 
-export function Gantt(this: WCGantt) {
+export function Gantt(this: WcGantt) {
   const box = `0 0 ${this.settings.width} ${this.settings.height}`;
 
   const linkLines = this.settings.showDependencies
@@ -39,7 +39,7 @@ export function Gantt(this: WCGantt) {
 //   <stop offset="100%" stop-color="var(--gantt-chart-bg-color)"/>
 // </linearGradient>
 // </defs>
-export function getHeader(this: WCGantt, settings: CompiledSettings) {
+export function getHeader(this: WcGantt, settings: CompiledSettings) {
   let res;
   switch (settings.timeScaleMode) {
     case "day":

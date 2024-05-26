@@ -1,9 +1,9 @@
 import { svg } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import type { WCGantt } from "../WcGantt";
-export function YearMonth(this: WCGantt) {
-  const scale = this.schedule.timeScale;
-  const currentDay = this.schedule.timeScale.start;
+import type { WcGantt } from "../WcGantt";
+export function YearMonth(this: WcGantt) {
+  const scale = this.timeScale;
+  const currentDay = this.timeScale.start;
   const ticks = [];
 
   const currentMonth = currentDay.getMonth();

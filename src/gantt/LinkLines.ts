@@ -2,10 +2,10 @@ import { svg } from "lit";
 
 import { p2s } from "../utils";
 import { createRoundedPathString } from "../roundedCorners";
-import type { WCGantt } from "../WcGantt";
+import type { WcGantt } from "../WcGantt";
 import type { IDependency, Item } from "../schedule";
 
-export function LinkLines(this: WCGantt) {
+export function LinkLines(this: WcGantt) {
   const itemsIdsMap: Map<string, Item> = this.schedule.itemsIndex;
 
   return svg`
@@ -33,7 +33,7 @@ export function LinkLines(this: WCGantt) {
 }
 
 function renderLink(
-  this: WCGantt,
+  this: WcGantt,
   l: IDependency,
   source?: Item,
   target?: Item
@@ -63,10 +63,10 @@ function renderLink(
   if (y1 > y2) {
     vgap = -vgap;
   }
-  const sEndX = this.schedule.timeScale.dateToPx(sourceItem.earlyFinish);
-  const sStartX = this.schedule.timeScale.dateToPx(sourceItem.earlyStart);
-  const eEndX = this.schedule.timeScale.dateToPx(targetItem.earlyFinish);
-  const eStartX = this.schedule.timeScale.dateToPx(targetItem.earlyStart);
+  const sEndX = this.timeScale.dateToPx(sourceItem.earlyFinish);
+  const sStartX = this.timeScale.dateToPx(sourceItem.earlyStart);
+  const eEndX = this.timeScale.dateToPx(targetItem.earlyFinish);
+  const eStartX = this.timeScale.dateToPx(targetItem.earlyStart);
 
   const drawLineWithArrow = (p1: number[][], p2: number[][]) => {
     const id = `${l.predecessor}-${l.successor}-${l.type}`;

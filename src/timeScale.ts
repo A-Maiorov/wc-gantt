@@ -3,48 +3,56 @@ import type { TimeScaleMode } from "./settings";
 const msPerDay = 86400000;
 
 export class TimeScale {
-  start: Date;
-  widthPx: number;
-  startMs: number;
-  pxPerWeek: number;
-  pxPerDay: number;
-  msPerPx: number;
-  end: Date;
-  totalDays: number;
-  endMs: number;
-  viewMode: string;
+  private _start: Date;
+  get start() {
+    return this._start;
+  }
+  set start(v: Date) {
+    this._start = new Date(v.setHours(0, 0, 0, 0));
+  }
+
+  get startMs() {
+    return this.start.getTime();
+  }
+  get pxPerWeek() {
+    return this.pxPerDay * 7;
+  }
+
+  viewPortWidth: number;
+
+  get pxPerDay() {
+    const viewModeMultiplier: Record<TimeScaleMode, number> = {
+      month: 4,
+      week: 2,
+      day: 1,
+    };
+
+    let pxPerDay = 22;
+    return Math.round(pxPerDay / viewModeMultiplier[this.viewMode]);
+  }
+
+  get msPerPx() {
+    return msPerDay / this.pxPerDay;
+  }
+  private _end: Date;
+  get end() {
+    return this._end;
+  }
+  set end(v: Date) {
+    this._end = new Date(v.setHours(0, 0, 0, 0));
+  }
+  get totalDays() {
+    return Math.round(Math.abs((this.startMs - this.endMs) / msPerDay));
+  }
+  get endMs() {
+    return this.end.getTime();
+  }
+  public viewMode: TimeScaleMode;
   constructor(start: Date, end: Date, viewMode: TimeScaleMode) {
     this.viewMode = viewMode;
-    const startDay = new Date(start);
-    startDay.setHours(0, 0, 0, 0);
-    const endDay = new Date(end);
-    endDay.setHours(0, 0, 0, 0);
 
-    this.start = startDay;
-    this.end = endDay;
-    this.startMs = startDay.getTime();
-    this.endMs = endDay.getTime();
-    this.totalDays = Math.round(
-      Math.abs((this.startMs - endDay.getTime()) / msPerDay)
-    );
-
-    const viewModeMultiplier: Record<TimeScaleMode, number> = {
-      month: 3,
-      week: 4,
-      day: 5,
-    };
-    let pxPerDay = 5;
-    if (this.totalDays > 365) {
-      pxPerDay = 1 * viewModeMultiplier[viewMode];
-    } else if (this.totalDays > 155) {
-      pxPerDay = 4 * viewModeMultiplier[viewMode];
-    } else if (this.totalDays > 30) {
-      pxPerDay = 6 * viewModeMultiplier[viewMode];
-    }
-
-    this.pxPerDay = pxPerDay;
-    this.pxPerWeek = pxPerDay * 7;
-    this.msPerPx = msPerDay / pxPerDay;
+    this.start = start;
+    this.end = end;
   }
 
   private pxToMs(px: number) {
