@@ -39,7 +39,7 @@ export class Item implements IItem {
     );
   }
   set dataDate(v: Date) {
-    this._dataDate = new Date(v.setHours(0, 0, 0, 0));
+    if (v) this._dataDate = new Date(v.setHours(0, 0, 0, 0));
   }
   private _duration: number = 14;
   public get duration() {
@@ -188,6 +188,10 @@ export class Schedule {
     return dayjs(
       Math.max(...this.items.map((x) => x.earlyFinish.getTime()))
     ).toDate();
+  }
+
+  get durationDays() {
+    return dayjs(this.endDate).diff(this.startDate, "days");
   }
 
   private readonly __nonGroups = [

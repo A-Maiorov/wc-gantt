@@ -1,6 +1,6 @@
 import { type WcGantt } from "./WcGantt";
 import type { IDependency } from "./schedule";
-export type LinkAddedEvArgs = {
+export type BeforeLinkAddedEvArgs = {
   link: IDependency;
   cancel: () => void;
 };
@@ -55,7 +55,7 @@ export function configureAddLink(this: WcGantt) {
       },
     };
 
-    const ev = new CustomEvent<LinkAddedEvArgs>("before-link-added", {
+    const ev = new CustomEvent<BeforeLinkAddedEvArgs>("before-link-added", {
       detail: evArgs,
     });
     this.dispatchEvent(ev);

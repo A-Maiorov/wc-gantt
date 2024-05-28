@@ -21,6 +21,7 @@ import {
 import { TimeScale } from "./timeScale";
 import dayjs from "dayjs";
 
+export { BeforeLinkAddedEvArgs } from "./addLink";
 export { WcGanttSettings } from "./settings";
 export {
   Item,
@@ -173,10 +174,10 @@ export class WcGantt extends LitElement {
     this.setupInteractions();
   }
 
+  private __widthUpdated = false;
+
   private updateWidth() {
     const bcr = this.getBoundingClientRect();
-
-    // TODO : COnTINUE HERE => take MAX of  data width or viewPort width
 
     this.settings.width =
       bcr.width -
@@ -185,12 +186,15 @@ export class WcGantt extends LitElement {
       bcr.left;
 
     if (this.timeScale) {
-      const dataBasedWidth = this.timeScale.totalDays * this.timeScale.pxPerDay;
+      const dataBasedWidth =
+        (this.schedule.durationDays + this.__timeScaleEndGapDays) *
+        this.timeScale.pxPerDay;
       if (dataBasedWidth > this.settings.width)
         this.settings.width = dataBasedWidth;
     }
+    this.__widthUpdated = true;
   }
-
+  private __timeScaleEndGapDays = 7;
   private updateTimeScaleEndDate() {
     const maxDateBasedOnWidth = new TimeScale(
       this.settings.startDate,
@@ -230,7 +234,6 @@ export class WcGantt extends LitElement {
     if (this.interactionReady) return;
     await this.updateComplete;
     configureAddLink.bind(this)();
-    // configureMoveItem.bind(this)();
     configureResizeItem.bind(this)();
 
     this.interactionReady = true;
@@ -288,6 +291,8 @@ export class WcGantt extends LitElement {
   private scrollReady = false;
 
   protected updated() {
+    this.__widthUpdated = false;
+
     if (!this.items || this.items.length === 0 || this.scrollReady) return;
 
     const el = this.renderRoot
@@ -368,6 +373,11 @@ export class WcGantt extends LitElement {
           </div>
         `
       : html``;
+
+    if (!this.__widthUpdated) {
+      this.updateWidth();
+      this.updateTimeScaleEndDate();
+    }
 
     return html`
       <div class="time-scale-container">
