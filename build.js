@@ -25,3 +25,21 @@ const opts = {
   ],
 };
 await build(opts);
+
+/**
+ * @type import("esbuild").BuildOptions
+ */
+const optsSchedule = {
+  bundle: true,
+  minify: true,
+  minifyWhitespace: true,
+  minifySyntax: true,
+  sourcemap: false,
+  target: ["es2022"],
+  platform: "node",
+  format: "esm",
+  logLevel: "info",
+  outdir: "dist",
+  entryPoints: ["src/schedule.ts"],
+};
+await build(optsSchedule);

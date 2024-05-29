@@ -260,9 +260,7 @@ var __create=Object.create;var __defProp=Object.defineProperty;var __getOwnPropD
             viewBox="0 -960 960 960" >
             <path d="M280-320 120-480l160-160 43 43-88 87h490l-87-88 42-42 160 160-160 160-42-42 87-88H235l87 88-42 42Z"/>
           </svg>
-          <rect 
-            x=${controlsOffset+controlGap-.5+settings.barHeight/2} 
-            y="3" width="1px" height=${settings.barHeight-4}/>
+       
         </g>
         <g class="ctl-resize-end">
           <rect 
@@ -280,9 +278,7 @@ var __create=Object.create;var __defProp=Object.defineProperty;var __getOwnPropD
             viewBox="0 -960 960 960" >
             <path d="M280-320 120-480l160-160 43 43-88 87h490l-87-88 42-42 160 160-160 160-42-42 87-88H235l87 88-42 42Z"/>
           </svg>
-          <rect 
-            x=${w1-.5+settings.barHeight/2} 
-            y="3" width="1px" height=${settings.barHeight-4}/>
+         
         </g>
       `);let barDataDate=b2``;if(v3.dataDate.getTime()>this.schedule.dataDate.getTime()&&v3.isStarted){let barDataDateX=this.timeScale.dateToPx(v3.dataDate),leftY=i5*settings.rowHeight,centerY=leftY+settings.rowHeight/2;barDataDate=b2`
           <line             
