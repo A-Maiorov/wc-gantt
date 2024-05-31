@@ -3,8 +3,6 @@ export const barCss = css`
   :host {
     --gantt-milestone-color: #d33daf;
     --gantt-bar-back-fill: #65c16f;
-    /* --gantt-bar-warning-back-fill: #faad14;
-    --gantt-bar-danger-back-fill: #f5222d; */
     --gantt-bar-front-fill: #46ad51;
     --gantt-bar-group-back-fill: #3db9d3;
     --gantt-bar-group-front-fill: #299cb4;
@@ -15,6 +13,7 @@ export const barCss = css`
     --gantt-bar-inner-border-color: var(--gantt-chart-bg-color);
     --gantt-bar-outer-border-color: var(--gantt-chart-bg-color);
     --gantt-critical-path-color: #2d22f5;
+    --gantt-baseline-color: #bcbcbc;
   }
 
   .gantt-bar {
@@ -72,5 +71,16 @@ export const barCss = css`
   }
   .data-date-circle {
     fill: var(--gantt-bar-data-line-stroke);
+  }
+
+  .baseline {
+    --gantt-milestone-color: var(--gantt-baseline-color);
+    --gantt-bar-back-fill: var(--gantt-baseline-color);
+
+    --gantt-bar-front-fill: var(--gantt-baseline-color);
+    --gantt-bar-group-back-fill: var(--gantt-baseline-color);
+    --gantt-bar-group-front-fill: var(--gantt-baseline-color);
+    --gantt-bar-today-line-stroke: var(--gantt-baseline-color);
+    --gantt-bar-data-line-stroke: var(--gantt-baseline-color);
   }
 `;

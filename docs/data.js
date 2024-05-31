@@ -91,7 +91,37 @@ const data = [
     ],
   },
 ];
-
+window.baselineData = [
+  {
+    id: "12",
+    name: "1.2 Activity",
+    duration: 4,
+  },
+  {
+    id: "13",
+    name: "1.3 Activity",
+    duration: 6,
+  },
+  {
+    id: "14",
+    type: "milestone",
+    name: "1.4 Milestone",
+  },
+];
+window.baselineLinks = [
+  {
+    predecessor: "13",
+    successor: "14",
+    type: "FS",
+    lag: 0,
+  },
+  {
+    predecessor: "12",
+    successor: "13",
+    type: "FS",
+    lag: 0,
+  },
+];
 window.data = [...data];
 window.links = [
   {

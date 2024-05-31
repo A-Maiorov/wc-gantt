@@ -52,12 +52,17 @@
         timeScaleMode: "week",
         showCriticalPath: true,
         startDate: new Date( new Date().setDate(new Date().getDate() - 4)),
-        dataDate:new Date( new Date().setDate(new Date().getDate() - 2)),
+        dataDate: new Date( new Date().setDate(new Date().getDate() - 2)),
+        baselineDate: new Date( new Date().setDate(new Date().getDate() - 4)),
       };
 
       const wcGantt = document.querySelector("wc-gantt");
       wcGantt.items= window.data;
       wcGantt.dependencies= window.links;
+
+      wcGantt.baselineItems = []; // window.baselineData;
+      wcGantt.baselineDependencies =[];// baselineLinks;
+
       wcGantt.options = window.opts;
 
       wcGantt.addEventListener("item-click", (i) => {

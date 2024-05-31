@@ -8,6 +8,7 @@ export class WcGanttSettings {
   showCriticalPath: boolean = true;
   startDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
   dataDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
+  baselineDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
 }
 
 export interface CompiledSettings extends WcGanttSettings {

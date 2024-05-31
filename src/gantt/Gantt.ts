@@ -10,6 +10,7 @@ import { Bar } from "./Bar";
 import { svg } from "lit";
 import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
+import { BarBaseline } from "./barBaseline";
 
 export function Gantt(this: WcGantt) {
   const box = `0 0 ${this.settings.width} ${this.settings.height}`;
@@ -26,7 +27,8 @@ export function Gantt(this: WcGantt) {
     
      
 
-      ${Grid.bind(this)(this.settings)}           
+      ${Grid.bind(this)(this.settings)}        
+      ${BarBaseline.bind(this)(this.settings)}   
       ${linkLines}
       ${Bar.bind(this)(this.settings)}     
      

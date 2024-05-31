@@ -77,6 +77,8 @@ export class Item implements IItem {
   private __getEarlyStartBasedOnDependency(d: IDependency) {
     // this === successor
     const pred = this.s.itemsIndex.get(d.predecessor);
+    if (!pred) return this.defaultStartDate;
+
     switch (d.type) {
       case "FS":
         return dayjs(pred.earlyFinish).add(d.lag, "days").toDate();
@@ -159,19 +161,12 @@ export class Item implements IItem {
 }
 
 export class Schedule {
-  startDate: Date = new Date();
   dataDate: Date = new Date();
   itemsIndex: Map<string, Item>;
   items: Item[];
   dependencies: IDependency[];
 
-  constructor(
-    startDate: Date,
-    dataDate: Date,
-    items: IItem[],
-    dependencies: IDependency[]
-  ) {
-    this.startDate = new Date(startDate.setHours(0, 0, 0, 0));
+  constructor(dataDate: Date, items: IItem[], dependencies: IDependency[]) {
     this.dataDate = new Date(dataDate.setHours(0, 0, 0, 0));
 
     this.itemsIndex = new Map<string, Item>();
@@ -184,10 +179,14 @@ export class Schedule {
     this.dependencies = dependencies;
   }
 
+  get startDate() {
+    return new Date(Math.min(...this.items.map((x) => x.earlyStart.getTime())));
+  }
+
   get endDate() {
-    return dayjs(
+    return new Date(
       Math.max(...this.items.map((x) => x.earlyFinish.getTime()))
-    ).toDate();
+    );
   }
 
   get durationDays() {

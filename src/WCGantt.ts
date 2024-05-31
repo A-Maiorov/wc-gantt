@@ -124,6 +124,7 @@ export class WcGantt extends LitElement {
   schedule: Schedule;
 
   timeScale: TimeScale;
+  baselineSchedule?: Schedule;
 
   private updateSettings() {
     const rowHeight = parseFloat(
@@ -156,17 +157,32 @@ export class WcGantt extends LitElement {
     };
 
     this.schedule = new Schedule(
-      this.settings.startDate,
       this.settings.dataDate,
       this.items ?? [],
       this.dependencies ?? []
     );
+
+    if (this.baselineItems.length > 0)
+      this.baselineSchedule = new Schedule(
+        this.settings.baselineDate,
+        this.baselineItems ?? [],
+        this.baselineDependencies ?? []
+      );
+
     this.updateLabelsWidth();
     this.updateWidth();
     this.settings.height = this.schedule.items.length * this.settings.rowHeight;
 
+    const timeScaleStart = Math.min(
+      this.settings.startDate.getTime(),
+      this.settings.dataDate.getTime(),
+      this.settings.baselineDate.getTime(),
+      this.schedule.startDate.getTime(),
+      this.baselineSchedule?.startDate.getTime() ?? Number.MAX_VALUE
+    );
+
     this.timeScale = new TimeScale(
-      dayjs(this.settings.startDate).subtract(5, "days").toDate(),
+      dayjs(timeScaleStart).subtract(5, "days").toDate(),
       this.schedule.endDate,
       this.settings.timeScaleMode
     );
@@ -227,6 +243,12 @@ export class WcGantt extends LitElement {
 
   @property({ type: Array, attribute: false })
   dependencies: IDependency[];
+
+  @property({ type: Array, attribute: false })
+  baselineItems: IItem[];
+
+  @property({ type: Array, attribute: false })
+  baselineDependencies: IDependency[];
 
   private interactionReady = false;
 

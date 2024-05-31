@@ -7,6 +7,7 @@ import type { Item } from "../schedule";
 import dayjs from "dayjs";
 
 function renderMilestone(
+  this: WcGantt,
   x: number,
   cy: number,
   barHeight: number,
@@ -23,9 +24,11 @@ function renderMilestone(
   ]
     .map((p) => `${p[0]},${p[1]}`)
     .join(" ");
+
   return {
     id,
     tpl: svg`
+    
     <svg 
       x=${x - halfBarHeight}
       y=${cy}
@@ -33,6 +36,7 @@ function renderMilestone(
       data-item-id=${v.id}               
       class="gantt-bar"                  
     >
+      
       <polygon
         points=${points}
         class="milestone"            
@@ -49,6 +53,7 @@ function renderMilestone(
   `,
   };
 }
+
 export function getControlGap(settings: CompiledSettings) {
   return settings.rowHeight / 6; // 6;
 }
@@ -82,7 +87,16 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
 
     const cy = settings.barHeight / 2 + 1; //y + barHeight / 2;
     if (v.type === "milestone") {
-      return renderMilestone(x, y, settings.barHeight, handler, id, v);
+      const result = renderMilestone.bind(this)(
+        x,
+        y,
+        settings.barHeight,
+        handler,
+        id,
+        v
+      );
+
+      return result;
     }
 
     const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
@@ -93,19 +107,6 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
     let barCss = "gantt-bar";
     barCss += v.type === "group" ? " group" : "";
-
-    let warning = false;
-    let danger = false;
-    // if (settings.showDelay) {
-    //   if (x + w2 < todayX && v.percentCompletion < 0.999999) {
-    //     warning = true;
-    //     danger = false;
-    //   }
-    //   if (x + w1 < todayX && v.percentCompletion < 0.999999) {
-    //     warning = false;
-    //     danger = true;
-    //   }
-    // }
 
     const controlRadius = settings.rowHeight / 6; // 6;
     const controlGap = getControlGap(settings); // 6;
@@ -214,38 +215,39 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         </g>
       `;
 
-    let barDataDate = svg``;
-    if (
-      v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
-      v.isStarted
-    ) {
-      const barDataDateX = this.timeScale.dateToPx(v.dataDate);
-      const leftY = i * settings.rowHeight;
-      const centerY = leftY + settings.rowHeight / 2;
+    // let barDataDate = svg``;
+    // if (
+    //   v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
+    //   v.isStarted
+    // ) {
+    //   const barDataDateX = this.timeScale.dateToPx(v.dataDate);
+    //   const leftY = i * settings.rowHeight;
+    //   const centerY = leftY + settings.rowHeight / 2;
 
-      barDataDate = svg`
-          <line             
-            x1=${dataDateX}
-            x2=${barDataDateX}
-            y1=${leftY}
-            y2=${centerY}
-            class="data-date-line"
-          />
-          <line             
-          x1=${barDataDateX}
-          x2=${dataDateX}
-          y1=${centerY}
-          y2=${leftY}
-          class="data-date-line"
-        />
-        `;
+    //   barDataDate = svg`
+    //       <line
+    //         x1=${dataDateX}
+    //         x2=${barDataDateX}
+    //         y1=${leftY}
+    //         y2=${centerY}
+    //         class="data-date-line"
+    //       />
+    //       <line
+    //       x1=${barDataDateX}
+    //       x2=${dataDateX}
+    //       y1=${centerY}
+    //       y2=${leftY}
+    //       class="data-date-line"
+    //     />
+    //     `;
 
-      //dataDateX
-    }
+    //   //dataDateX
+    // }
 
     return {
       id,
       tpl: svg` 
+     
       <svg 
         x=${x - controlsOffset} 
         y=${y - 1}              
@@ -254,10 +256,8 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         .item=${v}
         data-item-id=${v.id}        
         class=${barCss}
-        ?warning=${warning}
-        ?danger=${danger}
-      >     
-        ${barDataDate}
+       
+      >      
         ${backBar}
         ${frontBar}
         ${barBorder}
@@ -267,13 +267,6 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     `,
     };
   });
-  // <text
-  // style="fill:floralwhite;text-anchor: start;"
-  // x=${controlsOffset}
-  // y=${cy}
-  // class="text tiny">
-  //   ${v.start.toDateString()}
-  // </text>
 
   return svg`
     <g>      
