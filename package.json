@@ -1,6 +1,6 @@
 {
   "name": "wc-gantt",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Gantt chart web component",
   "main": "dist/WcGantt.js",
   "type": "module",

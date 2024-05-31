@@ -14,6 +14,7 @@ export const barCss = css`
     --gantt-bar-outer-border-color: var(--gantt-chart-bg-color);
     --gantt-critical-path-color: #2d22f5;
     --gantt-baseline-color: #bcbcbc;
+    --gantt-baseline-dark: #9d9d9d;
   }
 
   .gantt-bar {
@@ -77,10 +78,10 @@ export const barCss = css`
     --gantt-milestone-color: var(--gantt-baseline-color);
     --gantt-bar-back-fill: var(--gantt-baseline-color);
 
-    --gantt-bar-front-fill: var(--gantt-baseline-color);
+    --gantt-bar-front-fill: var(--gantt-baseline-dark);
     --gantt-bar-group-back-fill: var(--gantt-baseline-color);
-    --gantt-bar-group-front-fill: var(--gantt-baseline-color);
-    --gantt-bar-today-line-stroke: var(--gantt-baseline-color);
-    --gantt-bar-data-line-stroke: var(--gantt-baseline-color);
+    --gantt-bar-group-front-fill: var(--gantt-baseline-dark);
+    --gantt-bar-today-line-stroke: var(--gantt-baseline-dark);
+    --gantt-bar-data-line-stroke: var(--gantt-baseline-dark);
   }
 `;

@@ -5,6 +5,7 @@ import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
 import type { Item } from "../schedule";
 import { getControlGap } from "./Bar";
+import dayjs from "dayjs";
 
 function renderMilestone(
   this: WcGantt,
@@ -104,6 +105,11 @@ export function BarBaseline(this: WcGantt, settings: CompiledSettings) {
     if (this.baselineSchedule) {
       const bl = this.baselineSchedule.itemsIndex.get(v.id);
       if (bl) {
+        const progressDate = dayjs(bl.earlyStart)
+          .add(bl.progressDays, "days")
+          .toDate();
+        const progressW = scale.pxForTimeSpan(bl.earlyStart, progressDate);
+
         barBaseline = svg`
           <svg 
           x=${scale.dateToPx(bl.earlyStart) - controlsOffset} 
@@ -122,8 +128,17 @@ export function BarBaseline(this: WcGantt, settings: CompiledSettings) {
                 height=${bl.type === "group" ? grHeight : settings.barHeight}
                 rx=${1.8}
                 ry=${1.8}
-                class="back baseline"
-                    
+                class="back baseline"                    
+              />
+              <rect
+                id=${"bl-progress" + bl.id}
+                x=${controlsOffset}
+                y="4"
+                width=${progressW}
+                height=${bl.type === "group" ? grHeight : settings.barHeight}
+                rx=${1.8}
+                ry=${1.8}
+                class="front baseline"                    
               />
           </svg>
         `;
