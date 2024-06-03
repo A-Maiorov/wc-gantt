@@ -12,6 +12,21 @@
       display: flex;
       flex-direction: column;
     }
+
+    .labels{
+      min-width: 200px;
+    }
+
+    .lbl {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      height: var(--gantt-layout-row-height);
+      box-sizing: border-box;
+      border-top: var(--gantt-layout-line-width) solid var(--gantt-layout-line-stroke);
+    }
+
+
   </style>
 </head>
 <body>
@@ -25,7 +40,7 @@
 
   </style>
   
-  <wc-gantt >
+  <wc-gantt id="gantt1">
     <div slot="top-left-corner" id="ctrls">
       <select id="viewMode" style=" height: 30px;width: 100%;">
         <option value="day">Day</option>
@@ -38,6 +53,51 @@
       </div>     
     </div>
   </wc-gantt>
+
+  <br/>
+  <hr/>
+  <br/>
+
+  <wc-gantt id="gantt2">
+    <div slot="top-left-corner" id="ctrls">
+      <select id="viewMode" style=" height: 30px;width: 100%;">
+        <option value="day">Day</option>
+        <option value="week" selected>Week</option>
+        <option value="month">Month</option>
+      </select>
+      <div>
+        <input type="checkbox" id="showLinks" checked>
+        <label for="showLinks">Show Links</label>
+      </div>     
+    </div>
+    <div class="labels"  slot="labels">
+      <div class="lbl"> group 1</div>
+      <div class="lbl"> subgroup 1 1</div>
+      <div class="lbl">1.1.1   Activity</div>
+      <div class="lbl">1.1.2 Activity</div>
+      <div class="lbl">1.2 Activity</div>
+      <div class="lbl">1.3 Activity</div>
+      <div class="lbl">1.4 Milestone</div>
+      <div class="lbl">1.5 Activity</div>
+      <div class="lbl">1.6 Activity</div>
+      <div class="lbl">1.7 Activity</div>
+      <div class="lbl">1.8 Activity</div>
+      <div class="lbl">1.9 Activity</div>
+      <div class="lbl">2 Group</div>
+      <div class="lbl">2.1 Activity</div>
+      <div class="lbl">2.2 Activity</div>
+      <div class="lbl">2.3 Activity</div>
+      <div class="lbl">2.4 Activity</div>
+      
+    </div>
+  
+  </wc-gantt>
+
+
+
+
+
+
   <!-- <script type="module" async src="https://unpkg.com/wc-gantt"></script> -->
   <script type="module" async src="WcGantt.js"></script>
   <script src="./data.js"></script>
@@ -47,7 +107,7 @@
     function ready() {
 
       window.opts = {
-        
+      // showLabels: false,
         disableSF: true,
         timeScaleMode: "week",
         showCriticalPath: true,
@@ -56,48 +116,53 @@
         baselineDate: new Date( new Date().setDate(new Date().getDate() - 4)),
       };
 
-      const wcGantt = document.querySelector("wc-gantt");
-      wcGantt.items= window.data;
-      wcGantt.dependencies= window.links;
+      const wcGantt1 = document.querySelector("#gantt1");
+      const wcGantt2 = document.querySelector("#gantt2");
+      for(const wcGantt of [wcGantt1, wcGantt2]){
+        wcGantt.items= window.data;
+        wcGantt.dependencies= window.links;
 
-      wcGantt.baselineItems =  window.baselineData;
-      wcGantt.baselineDependencies = baselineLinks;
+        wcGantt.baselineItems =  window.baselineData;
+        wcGantt.baselineDependencies = baselineLinks;
 
-      wcGantt.options = window.opts;
+        wcGantt.options = window.opts;
 
-      wcGantt.addEventListener("item-click", (i) => {
-        console.log(i);
-      });
-      wcGantt.addEventListener("dependency-click", (i) => {
-        console.log(i);
-      });
-      
-      wcGantt.addEventListener("item-moved", (i) => {
-        console.log(i);
-      });
-      wcGantt.addEventListener("item-resized", (i) => {
-        console.log(i);
-      });
+        wcGantt.addEventListener("item-click", (i) => {
+          console.log(i);
+          
+        });
+        wcGantt.addEventListener("dependency-click", (i) => {
+          console.log(i);
+          
+        });
+        
+        
+        wcGantt.addEventListener("item-resized", (i) => {
+          console.log(i);
+          wcGantt.requestUpdate();
+        });
 
-      wcGantt.addEventListener("before-link-added", (i) => {
-        console.log(i);
-      });
+        wcGantt.addEventListener("before-link-added", (i) => {
+          console.log(i);
+          wcGantt.requestUpdate();
+        });
 
-      function changeOptions(options) {
-        wcGantt.options = { ...opts, ...options };
+        function changeOptions(options) {
+          wcGantt.options = { ...opts, ...options };
+        }
+
+        const viewModeEl = document.querySelector("#viewMode");
+        viewModeEl.onchange = (e) => {
+          const timeScaleMode = e.target.value;
+          changeOptions({ timeScaleMode });
+        };
+
+        const showLinksEl =document.querySelector("#showLinks");
+        showLinksEl.onchange = () => {
+          const showDependencies = showLinksEl.checked;
+          changeOptions({ showDependencies });
+        };
       }
-
-      const viewModeEl = document.querySelector("#viewMode");
-      viewModeEl.onchange = (e) => {
-        const timeScaleMode = e.target.value;
-        changeOptions({ timeScaleMode });
-      };
-
-      const showLinksEl =document.querySelector("#showLinks");
-      showLinksEl.onchange = () => {
-        const showDependencies = showLinksEl.checked;
-        changeOptions({ showDependencies });
-      };
 
       // const showDelayEl = document.querySelector("#showDelay");
       // showDelayEl.onchange = () => {

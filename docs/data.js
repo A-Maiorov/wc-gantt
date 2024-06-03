@@ -15,6 +15,7 @@ const data = [
           {
             id: "112",
             name: "1.1.2 Activity",
+            progressDays: 1,
             duration: 7,
           },
         ],

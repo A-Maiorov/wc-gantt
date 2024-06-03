@@ -1,5 +1,5 @@
 import { customElement, property } from "lit/decorators.js";
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 
 import { Gantt, getHeader } from "./gantt/Gantt";
 import { controlsCss } from "./gantt/controls.css";
@@ -20,6 +20,7 @@ import {
 } from "./schedule";
 import { TimeScale } from "./timeScale";
 import dayjs from "dayjs";
+import { styles } from "./WcGantt.css";
 
 export { BeforeLinkAddedEvArgs } from "./addLink";
 export { WcGanttSettings } from "./settings";
@@ -49,76 +50,7 @@ declare global {
  */
 @customElement("wc-gantt")
 export class WcGantt extends LitElement {
-  static styles = [
-    css`
-      svg {
-        display: block;
-      }
-      :host {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        width: 100%;
-        height: 100%;
-        box-sizing: border-box;
-        flex-wrap: nowrap;
-        white-space: nowrap;
-      }
-      .gantt {
-        height: fit-content;
-        overflow: hidden;
-        overflow-x: scroll;
-        scrollbar-width: none;
-      }
-      .gantt-v {
-        overflow: hidden;
-        overflow-y: scroll;
-        display: flex;
-        height: 100%;
-      }
-
-      .time-scale {
-        width: auto;
-        overflow: hidden;
-        overflow-x: auto;
-        scrollbar-width: thin;
-      }
-
-      .time-scale {
-        transform: rotateX(180deg);
-        overflow-x: auto;
-      }
-      .time-scale > svg {
-        transform: rotateX(180deg);
-      }
-
-      .labels-container {
-        box-shadow: 1px 0px 6px 1px #88888878;
-        clip-path: inset(0px -20px 0px 0px);
-
-        height: fit-content;
-        box-sizing: border-box;
-        z-index: 1;
-        margin: 0;
-        padding: 0;
-        margin-top: calc(var(--gantt-layout-line-width) / 2);
-      }
-      .time-scale-container {
-        display: flex;
-      }
-      .time-scale-margin {
-        box-shadow: 1px 0px 6px 1px #88888878;
-        clip-path: inset(0px -20px 0px 0px);
-        flex-shrink: 0;
-        z-index: 1;
-        overflow: hidden;
-      }
-    `,
-    layoutCss,
-    controlsCss,
-    linkLineCss,
-    barCss,
-  ];
+  static styles = [styles, layoutCss, controlsCss, linkLineCss, barCss];
 
   settings: CompiledSettings;
   schedule: Schedule;
@@ -126,7 +58,130 @@ export class WcGantt extends LitElement {
   timeScale: TimeScale;
   baselineSchedule?: Schedule;
 
-  private updateSettings() {
+  private getLabelsElement() {
+    return this.renderRoot
+      .querySelector<HTMLSlotElement>("slot[data-labels]")
+      ?.assignedElements({ flatten: true })[0];
+  }
+
+  private labelsReady = false;
+
+  protected configureLabelsObserver() {
+    if (this.settings.showLabels) {
+      const config: MutationObserverInit = {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true,
+      };
+
+      const updateLabelsWidth = () => {
+        this.requestUpdate();
+      };
+
+      const labelsElement = this.getLabelsElement();
+      const obs = new MutationObserver(updateLabelsWidth);
+      obs.observe(labelsElement, config);
+      if (labelsElement.shadowRoot)
+        obs.observe(labelsElement.shadowRoot, config);
+    }
+    this.labelsReady = true;
+  }
+
+  protected firstUpdated(): void {
+    this.configureLabelsObserver();
+    this.requestUpdate();
+  }
+
+  protected updated(): void {
+    if (!this.items || this.items.length === 0) return;
+    if (this.labelsReady && !this.interactionReady) this.setupInteractions();
+  }
+
+  protected willUpdate(_changedProperties: Map<PropertyKey, unknown>): void {
+    if (!this.items || this.items.length === 0) return;
+
+    const defaultOpts = new WcGanttSettings();
+
+    const cssSettings = this.getSettingsBasedOnComputedCSS();
+
+    this.settings = {
+      ...defaultOpts,
+      ...cssSettings,
+      labelsWidth: 0,
+      width: 0,
+      height: 0,
+      ...this.options,
+    };
+
+    if (
+      _changedProperties.has("settings") ||
+      _changedProperties.has("items") ||
+      _changedProperties.has("dependencies")
+    ) {
+      this.schedule = new Schedule(
+        this.settings.dataDate,
+        this.items ?? [],
+        this.dependencies ?? []
+      );
+
+      if (this.baselineItems.length > 0)
+        this.baselineSchedule = new Schedule(
+          this.settings.baselineDate,
+          this.baselineItems ?? [],
+          this.baselineDependencies ?? []
+        );
+    }
+
+    const dimensions = this.calculateDimensions();
+    this.settings = {
+      ...this.settings,
+      ...dimensions,
+    };
+
+    if (this.settings.showCriticalPath) {
+      this.schedule.updateCriticalPath();
+    }
+
+    const timeScaleStart = Math.min(
+      this.settings.startDate.getTime(),
+      this.settings.dataDate.getTime(),
+      this.settings.baselineDate.getTime(),
+      this.schedule.startDate.getTime(),
+      this.baselineSchedule?.startDate.getTime() ?? Number.MAX_VALUE
+    );
+
+    this.timeScale = new TimeScale(
+      dayjs(timeScaleStart).subtract(5, "days").toDate(),
+      dayjs(this.schedule.endDate).add(7, "days").toDate(),
+      this.settings.timeScaleMode
+    );
+
+    const widthOfData = this.timeScale.dateToPx(this.timeScale.end);
+    if (widthOfData > this.settings.width) this.settings.width = widthOfData;
+    else {
+      this.timeScale.end = this.timeScale.pxToDate(this.settings.width);
+    }
+  }
+
+  // private updateTimeScaleElementPosition() {
+  //   const el = this.renderRoot
+  //     .querySelector<HTMLSlotElement>("slot[data-labels]")
+  //     ?.assignedElements({ flatten: true })[0];
+  //   if (!el) return;
+
+  //   const r = (el as HTMLElement).getBoundingClientRect();
+
+  //   const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
+  //   this.settings.labelsWidth = w;
+
+  //   const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
+
+  //   // this.timeScaleElement.style.marginRight =
+  //   //   ganttV.offsetWidth - ganttV.clientWidth + "px";
+  // }
+
+  private getSettingsBasedOnComputedCSS() {
     const rowHeight = parseFloat(
       getComputedStyle(this).getPropertyValue("--gantt-layout-row-height")
     );
@@ -142,92 +197,32 @@ export class WcGantt extends LitElement {
       getComputedStyle(this).getPropertyValue("--gantt-layout-line-width")
     );
 
-    const defaultOpts = new WcGanttSettings();
-
-    this.settings = {
-      ...defaultOpts,
-      scaleHeight,
+    return {
       rowHeight,
+      scaleHeight,
       barHeight,
       lineWidth,
-      labelsWidth: 0,
-      width: 0,
-      height: 0,
-      ...this.options,
     };
-
-    this.schedule = new Schedule(
-      this.settings.dataDate,
-      this.items ?? [],
-      this.dependencies ?? []
-    );
-
-    if (this.baselineItems.length > 0)
-      this.baselineSchedule = new Schedule(
-        this.settings.baselineDate,
-        this.baselineItems ?? [],
-        this.baselineDependencies ?? []
-      );
-
-    this.updateLabelsWidth();
-    this.updateWidth();
-    this.settings.height = this.schedule.items.length * this.settings.rowHeight;
-
-    const timeScaleStart = Math.min(
-      this.settings.startDate.getTime(),
-      this.settings.dataDate.getTime(),
-      this.settings.baselineDate.getTime(),
-      this.schedule.startDate.getTime(),
-      this.baselineSchedule?.startDate.getTime() ?? Number.MAX_VALUE
-    );
-
-    this.timeScale = new TimeScale(
-      dayjs(timeScaleStart).subtract(5, "days").toDate(),
-      this.schedule.endDate,
-      this.settings.timeScaleMode
-    );
-    this.updateTimeScaleEndDate();
-    this.setupInteractions();
   }
 
-  private __widthUpdated = false;
+  private calculateDimensions() {
+    const height = this.schedule.items.length * this.settings.rowHeight;
 
-  private updateWidth() {
+    const r = (this.getLabelsElement() as HTMLElement)?.getBoundingClientRect();
+
+    const w = Math.round(((r?.width ?? 0) + Number.EPSILON) * 10) / 10;
+    const labelsWidth = w;
+
+    if (this.timeScaleMarginElement)
+      this.timeScaleMarginElement.style.width = labelsWidth + "px";
+
     const bcr = this.getBoundingClientRect();
-
-    this.settings.width =
-      bcr.width -
-      this.settings.labelsWidth -
-      (bcr.right - bcr.width) -
-      bcr.left;
-
-    if (this.timeScale) {
-      const dataBasedWidth =
-        (this.schedule.durationDays + this.__timeScaleEndGapDays) *
-        this.timeScale.pxPerDay;
-      if (dataBasedWidth > this.settings.width)
-        this.settings.width = dataBasedWidth;
-    }
-    this.__widthUpdated = true;
-  }
-  private __timeScaleEndGapDays = 7;
-  private updateTimeScaleEndDate() {
-    const maxDateBasedOnWidth = new TimeScale(
-      this.settings.startDate,
-      this.settings.startDate,
-      this.settings.timeScaleMode
-    )
-      .pxToDate(this.settings.width)
-      .setHours(0, 0, 0, 0);
-
-    const maxDateBasedOnData = dayjs(this.schedule.endDate)
-      .add(7, "days")
-      .toDate()
-      .getTime();
-
-    this.timeScale.end = new Date(
-      new Date(Math.max(maxDateBasedOnData, maxDateBasedOnWidth))
-    );
+    const width = bcr.width - labelsWidth - 30;
+    return {
+      labelsWidth,
+      width,
+      height,
+    };
   }
 
   ___lastMovement: number = 0;
@@ -257,6 +252,8 @@ export class WcGantt extends LitElement {
     await this.updateComplete;
     configureAddLink.bind(this)();
     configureResizeItem.bind(this)();
+
+    this.configureDependencyClick();
 
     this.interactionReady = true;
   }
@@ -312,110 +309,43 @@ export class WcGantt extends LitElement {
 
   private scrollReady = false;
 
-  protected updated() {
-    this.__widthUpdated = false;
-
-    if (!this.items || this.items.length === 0 || this.scrollReady) return;
-
-    const el = this.renderRoot
-      .querySelector<HTMLSlotElement>("slot[data-labels]")
-      .assignedElements({ flatten: true })[0];
-    if (!el) return;
-
-    const config: MutationObserverInit = {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      characterData: true,
-    };
-
-    const updateLabelsWidth = () => {
-      this.updateLabelsWidth();
-      this.updateWidth();
-      this.requestUpdate();
-    };
-
-    const obs = new MutationObserver(updateLabelsWidth);
-    obs.observe(el, config);
-    if (el.shadowRoot) obs.observe(el.shadowRoot, config);
-    updateLabelsWidth();
-
-    this.scrollReady = true;
-  }
-  protected updateLabelsWidth() {
-    const el = this.renderRoot
-      .querySelector<HTMLSlotElement>("slot[data-labels]")
-      ?.assignedElements({ flatten: true })[0];
-    if (!el) return;
-
-    const r = (el as HTMLElement).getBoundingClientRect();
-
-    const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
-    this.settings.labelsWidth = w;
-    this.updateWidth();
-    this.updateTimeScaleEndDate();
-
-    const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
-
-    this.timeScaleMarginElement.style.width = w + "px";
-
-    this.timeScaleElement.style.marginRight =
-      ganttV.offsetWidth - ganttV.clientWidth + "px";
-  }
-
-  protected willUpdate(_changedProperties: Map<PropertyKey, unknown>): void {
-    if (
-      _changedProperties.has("items") ||
-      _changedProperties.has("dependencies") ||
-      _changedProperties.has("options")
-    )
-      this.updateSettings();
-
-    if (!this.settings) return;
-
-    if (this.settings.showCriticalPath) {
-      this.schedule.updateCriticalPath();
-    }
-    this.updateTimeScaleEndDate();
-
-    this.updateComplete.then(() => {
-      this.configureDependencyClick();
-    });
-  }
-
   render() {
     if (!this.items || this.items.length === 0) return "No data";
 
     const labels = this.settings.showLabels
       ? html`
-          <div class="labels">
-            ${this.schedule.items.map(
-              (x) => html`<div class="lbl">${x.name}</div>`
-            )}
-          </div>
+          <slot name="labels" data-labels>
+            <div class="labels">
+              ${this.schedule.items.map(
+                (x) => html`<div class="lbl">${x.name}</div>`
+              )}
+            </div>
+          </slot>
         `
       : html``;
 
-    if (!this.__widthUpdated) {
-      this.updateWidth();
-      this.updateTimeScaleEndDate();
-    }
+    const timeScale = this.labelsReady
+      ? html`<div class="time-scale" @scroll=${this.onScroll}>
+          ${getHeader.bind(this)(this.settings)}
+        </div>`
+      : "";
+    const gantt = this.labelsReady
+      ? html`<div class="gantt" @scroll=${this.onScroll}>
+          ${Gantt.bind(this)()}
+        </div>`
+      : "";
 
     return html`
       <div class="time-scale-container">
         <div class="time-scale-margin">
           <slot name="top-left-corner"></slot>
         </div>
-        <div class="time-scale" @scroll=${this.onScroll}>
-          ${getHeader.bind(this)(this.settings)}
-        </div>
+        ${timeScale}
       </div>
 
       <div class="gantt-v">
-        <div class="labels-container">
-          <slot name="labels" data-labels>${labels}</slot>
-        </div>
-        <div class="gantt" @scroll=${this.onScroll}>${Gantt.bind(this)()}</div>
+        <div class="labels-container">${labels}</div>
+        ${gantt}
       </div>
     `;
   }
