@@ -120,6 +120,7 @@ export class WcGantt extends LitElement {
       _changedProperties.has("dependencies")
     ) {
       this.schedule = new Schedule(
+        this.settings.startDate,
         this.settings.dataDate,
         this.items ?? [],
         this.dependencies ?? []
@@ -127,6 +128,7 @@ export class WcGantt extends LitElement {
 
       if (this.baselineItems.length > 0)
         this.baselineSchedule = new Schedule(
+          this.settings.startDate,
           this.settings.baselineDate,
           this.baselineItems ?? [],
           this.baselineDependencies ?? []
@@ -163,23 +165,6 @@ export class WcGantt extends LitElement {
       this.timeScale.end = this.timeScale.pxToDate(this.settings.width);
     }
   }
-
-  // private updateTimeScaleElementPosition() {
-  //   const el = this.renderRoot
-  //     .querySelector<HTMLSlotElement>("slot[data-labels]")
-  //     ?.assignedElements({ flatten: true })[0];
-  //   if (!el) return;
-
-  //   const r = (el as HTMLElement).getBoundingClientRect();
-
-  //   const w = Math.round((r.width + Number.EPSILON) * 10) / 10;
-  //   this.settings.labelsWidth = w;
-
-  //   const ganttV = this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
-
-  //   // this.timeScaleElement.style.marginRight =
-  //   //   ganttV.offsetWidth - ganttV.clientWidth + "px";
-  // }
 
   private getSettingsBasedOnComputedCSS() {
     const rowHeight = parseFloat(

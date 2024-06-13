@@ -22,6 +22,10 @@ export const barCss = css`
   }
   .milestone {
     fill: var(--gantt-milestone-color, #d33daf);
+    stroke: unset;
+  }
+  .milestone.crit {
+    stroke: var(--gantt-bar-inner-border-color);
   }
 
   .bar-outer-border {

@@ -31,6 +31,11 @@ const data = [
         duration: 6,
       },
       {
+        id: "13.1",
+        name: "1.3.1 Milestone",
+        type: "milestone",
+      },
+      {
         id: "14",
         type: "milestone",
         name: "1.4 Milestone",
@@ -199,6 +204,7 @@ window.baselineLinks = [
     type: "FS",
     lag: 0,
   },
+
   {
     predecessor: "13",
     successor: "14",
@@ -242,12 +248,18 @@ window.links = [
   },
   {
     predecessor: "13",
-    successor: "14",
+    successor: "13.1",
     type: "FS",
     lag: 0,
   },
   {
     predecessor: "13",
+    successor: "14",
+    type: "FS",
+    lag: 0,
+  },
+  {
+    predecessor: "13.1",
     successor: "21",
     type: "FS",
     lag: 0,

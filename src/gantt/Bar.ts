@@ -25,6 +25,8 @@ function renderMilestone(
     .map((p) => `${p[0]},${p[1]}`)
     .join(" ");
 
+  const cssClass = v.crit ? "milestone crit" : "milestone";
+
   return {
     id,
     tpl: svg`
@@ -39,7 +41,7 @@ function renderMilestone(
       
       <polygon
         points=${points}
-        class="milestone"            
+        class=${cssClass}            
         @click=${handler}
       />
       <circle

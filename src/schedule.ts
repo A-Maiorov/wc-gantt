@@ -16,6 +16,7 @@ export interface IItem {
   type?: ItemType;
   progressDays?: number;
   dataDate?: Date;
+  defaultStartDate?: Date;
   nested?: IItem[];
 }
 
@@ -29,18 +30,14 @@ export class Item implements IItem {
   public progressDays: number = 0;
   public type: ItemType = "activity";
 
-  private _dataDate: Date | undefined;
-  get dataDate() {
+  public get dataDate() {
     return new Date(
-      this._dataDate ??
-        new Date(
-          Math.max(this.s.dataDate?.getTime() ?? this.s.startDate.getTime())
-        ).setHours(0, 0, 0, 0)
+      new Date(
+        Math.max(this.s.dataDate?.getTime() ?? this.s.startDate.getTime())
+      ).setHours(0, 0, 0, 0)
     );
   }
-  set dataDate(v: Date) {
-    if (v) this._dataDate = new Date(v.setHours(0, 0, 0, 0));
-  }
+
   private _duration: number = 14;
   public get duration() {
     if (this.type === "milestone") return 0;
@@ -106,10 +103,8 @@ export class Item implements IItem {
   public get isStarted() {
     return this.progressDays > 0;
   }
-
-  private get defaultStartDate() {
-    if (!this.isStarted) return this.dataDate;
-    return dayjs(this.dataDate).subtract(this.progressDays, "days").toDate();
+  public get defaultStartDate() {
+    return this.s.startDate;
   }
 
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
@@ -161,12 +156,19 @@ export class Item implements IItem {
 }
 
 export class Schedule {
+  startDate: Date = new Date();
   dataDate: Date = new Date();
   itemsIndex: Map<string, Item>;
   items: Item[];
   dependencies: IDependency[];
 
-  constructor(dataDate: Date, items: IItem[], dependencies: IDependency[]) {
+  constructor(
+    startDate: Date,
+    dataDate: Date,
+    items: IItem[],
+    dependencies: IDependency[]
+  ) {
+    this.startDate = new Date(startDate.setHours(0, 0, 0, 0));
     this.dataDate = new Date(dataDate.setHours(0, 0, 0, 0));
 
     this.itemsIndex = new Map<string, Item>();
@@ -177,10 +179,6 @@ export class Schedule {
     });
 
     this.dependencies = dependencies;
-  }
-
-  get startDate() {
-    return new Date(Math.min(...this.items.map((x) => x.earlyStart.getTime())));
   }
 
   get endDate() {
@@ -220,7 +218,6 @@ export class Schedule {
         i.nested = this._flattenItems(item.nested ?? []);
         flatArray.push(...i.nested);
       } else {
-        i.dataDate = item.dataDate;
         i.duration =
           item.duration != undefined && item.duration > 0
             ? item.duration
