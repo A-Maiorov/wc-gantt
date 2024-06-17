@@ -116,9 +116,11 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     const controlBorder = 1;
     const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
 
-    const borderCssClass = v.crit
-      ? "bar-inner-border crit"
-      : "bar-inner-border";
+    const isDelayed = v.type === "activity" && v.delayDays > 0;
+
+    let borderCssClass = v.crit ? "bar-inner-border crit" : "bar-inner-border";
+
+    if (isDelayed) borderCssClass += " delayed";
 
     const barBorder = svg`
     <rect
@@ -146,7 +148,12 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
       />
       `;
 
-    const frontBar =
+    let frontBarCss = "front";
+    if (isDelayed) {
+      frontBarCss += " delayed";
+    }
+
+    let frontBar =
       w2 > 0.000001
         ? svg`
           <rect
@@ -156,11 +163,36 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
             height=${v.type === "group" ? grHeight : settings.barHeight}
             rx=${1.8}
             ry=${1.8}
-            class="front"
+            class=${frontBarCss}
             @click=${handler}
             />`
         : null;
 
+    if (isDelayed) {
+      const delayW = scale.pxForTimeSpan(
+        v.earlyStart,
+        new Date(new Date().setHours(0, 0, 0, 0))
+      );
+
+      const delayBar =
+        w2 > 0.000001
+          ? svg`
+            <rect
+              y="1"
+              x=${controlsOffset}            
+              width=${delayW}
+              height=${settings.barHeight}
+              rx=${1.8}
+              ry=${1.8}
+              class="delay"
+              @click=${handler}
+              />`
+          : null;
+
+      frontBar = svg`
+        ${delayBar}${frontBar}
+      `;
+    }
     let controls = svg``;
 
     if (v.type === "activity")

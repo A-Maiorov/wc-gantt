@@ -2,7 +2,7 @@ import { css } from "lit";
 export const barCss = css`
   :host {
     --gantt-milestone-color: #d33daf;
-    --gantt-bar-back-fill: #65c16f;
+    --gantt-bar-back-fill: #83d78c;
     --gantt-bar-front-fill: #46ad51;
     --gantt-bar-group-back-fill: #3db9d3;
     --gantt-bar-group-front-fill: #299cb4;
@@ -13,6 +13,11 @@ export const barCss = css`
     --gantt-bar-inner-border-color: var(--gantt-chart-bg-color);
     --gantt-bar-outer-border-color: var(--gantt-chart-bg-color);
     --gantt-critical-path-color: #2d22f5;
+
+    --gantt-bar-front-delayed-fill: #0f751a;
+    --gantt-delay-fill-color: #46ad51;
+    --gantt-delayed-border-color: #0f751a;
+
     --gantt-baseline-color: #bcbcbc;
     --gantt-baseline-dark: #9d9d9d;
   }
@@ -40,10 +45,6 @@ export const barCss = css`
     fill: transparent;
   }
 
-  .crit {
-    --gantt-bar-inner-border-color: var(--gantt-critical-path-color);
-  }
-
   .gantt-bar .back {
     fill: var(--gantt-bar-back-fill, #65c16f);
   }
@@ -53,9 +54,23 @@ export const barCss = css`
   .gantt-bar[danger] .back {
     fill: var(--gantt-bar-danger-back-fill, #f5222d);
   }
+
+  .gantt-bar .delayed {
+    --gantt-bar-inner-border-color: var(--gantt-delayed-border-color);
+  }
+
   .gantt-bar .front {
     fill: var(--gantt-bar-front-fill, #46ad51);
   }
+
+  .gantt-bar .delay {
+    fill: var(--gantt-delay-fill-color, #46ad51);
+  }
+
+  .gantt-bar .front.delayed {
+    fill: var(--gantt-bar-front-delayed-fill, #46ad51);
+  }
+
   .gantt-bar.group .back {
     fill: var(--gantt-bar-group-back-fill, #3db9d3);
   }
@@ -78,6 +93,10 @@ export const barCss = css`
     fill: var(--gantt-bar-data-line-stroke);
   }
 
+  .bar-inner-border.crit.delayed,
+  .crit {
+    --gantt-bar-inner-border-color: var(--gantt-critical-path-color);
+  }
   .baseline {
     --gantt-milestone-color: var(--gantt-baseline-color);
     --gantt-bar-back-fill: var(--gantt-baseline-color);

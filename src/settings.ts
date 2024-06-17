@@ -4,7 +4,7 @@ export class WcGanttSettings {
   timeScaleMode: TimeScaleMode = "week";
   showDependencies: boolean = true;
   showLabels: boolean = true;
-  // showDelay: boolean = true;
+
   showCriticalPath: boolean = true;
   startDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
   dataDate: Date = new Date(new Date().setHours(0, 0, 0, 0));

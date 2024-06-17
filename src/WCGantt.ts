@@ -195,14 +195,17 @@ export class WcGantt extends LitElement {
 
     const r = (this.getLabelsElement() as HTMLElement)?.getBoundingClientRect();
 
-    const w = Math.round(((r?.width ?? 0) + Number.EPSILON) * 10) / 10;
+    const w = Math.ceil(r?.width ?? 0);
     const labelsWidth = w;
 
     if (this.timeScaleMarginElement)
       this.timeScaleMarginElement.style.width = labelsWidth + "px";
 
-    const bcr = this.getBoundingClientRect();
-    const width = bcr.width - labelsWidth - 30;
+    if (!this.ganttVElement) return;
+    const width = this.ganttVElement.clientWidth - labelsWidth;
+
+    if (this.timeScaleElement) this.timeScaleElement.style.width = width + "px";
+
     return {
       labelsWidth,
       width,
@@ -290,6 +293,15 @@ export class WcGantt extends LitElement {
       this.__ganttEl = this.renderRoot.querySelector<HTMLDivElement>(".gantt");
 
     return this.__ganttEl;
+  }
+
+  private __ganttVEl: HTMLDivElement;
+  get ganttVElement() {
+    if (!this.__ganttVEl)
+      this.__ganttVEl =
+        this.renderRoot.querySelector<HTMLDivElement>(".gantt-v");
+
+    return this.__ganttVEl;
   }
 
   private scrollReady = false;

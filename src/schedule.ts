@@ -113,6 +113,19 @@ export class Item implements IItem {
     return dayjs(suc.earlyFinish).add(d.lag, "days").toDate();
   }
 
+  get delayDays(): number {
+    if (this.earlyStart >= new Date(new Date().setHours(0, 0, 0, 0))) return 0;
+
+    const expectedProgress = dayjs(this.earlyFinish).diff(
+      this.earlyStart,
+      "days"
+    );
+    if (this.progressDays < expectedProgress) {
+      return expectedProgress - this.progressDays;
+    }
+    return 0;
+  }
+
   get earlyStart(): Date {
     if (this.type === "group") {
       return new Date(
