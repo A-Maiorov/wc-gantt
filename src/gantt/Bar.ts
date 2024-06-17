@@ -169,10 +169,12 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         : null;
 
     if (isDelayed) {
-      const delayW = scale.pxForTimeSpan(
-        v.earlyStart,
-        new Date(new Date().setHours(0, 0, 0, 0))
+      const end = Math.min(
+        new Date().setHours(0, 0, 0, 0),
+        v.earlyFinish.getTime()
       );
+
+      const delayW = scale.pxForTimeSpan(v.earlyStart, new Date(end));
 
       const delayBar =
         w2 > 0.000001

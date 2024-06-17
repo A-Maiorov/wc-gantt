@@ -8,23 +8,27 @@ class TreeNode {
   endDate: Date = this.schedule.itemsIndex.get(this.id).earlyFinish;
   get children(): TreeNode[] {
     return this.schedule.dependencies
-      .filter(
-        (l) =>
-          l.predecessor === this.id &&
-          dayjs(this.schedule.itemsIndex.get(this.id).earlyFinish)
-            .add(l.lag, "days")
-            .toDate()
-            .getTime() === this.__getSucDate(l)
-      )
+      .filter((l) => l.predecessor === this.id)
+      .filter((l) => {
+        const current = this.schedule.itemsIndex.get(this.id);
+
+        const currentEndWithLag = dayjs(current.earlyFinish)
+          .add(l.lag, "days")
+          .toDate();
+
+        const successorDate = this.__getSucDate(l);
+
+        //    l.predecessor === this.id &&
+        return currentEndWithLag.getTime() === successorDate;
+      })
       .map((x) => new TreeNode(this.schedule, x.successor));
   }
 
   private __getSucDate(l: IDependency) {
-    if (l.type.endsWith("F"))
-      return this.schedule.itemsIndex.get(l.successor).earlyFinish.getTime();
+    const successor = this.schedule.itemsIndex.get(l.successor);
+    if (l.type.endsWith("F")) return successor.earlyFinish.getTime();
 
-    if (l.type.endsWith("S"))
-      return this.schedule.itemsIndex.get(l.successor).earlyStart.getTime();
+    if (l.type.endsWith("S")) return successor.earlyStart.getTime();
   }
 
   constructor(protected schedule: Schedule, public id: string) {}
@@ -61,7 +65,7 @@ export function findLongestPath(
 
     if (!currentNode.children || currentNode.children.length === 0) {
       // If the current node is a leaf, check if the current path is the longest
-      if (newDuration > longestPathResult.longestDuration) {
+      if (newDuration >= longestPathResult.longestDuration) {
         longestPathResult.longestDuration = newDuration;
         longestPathResult.path = [...path];
       }

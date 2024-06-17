@@ -26,8 +26,18 @@ const data = [
         duration: 4,
       },
       {
+        id: "121",
+        name: "1.2.1 Activity",
+        duration: 4,
+      },
+      {
         id: "13",
         name: "1.3 Activity",
+        duration: 6,
+      },
+      {
+        id: "132",
+        name: "1.3.2 Activity",
         duration: 6,
       },
       {
@@ -247,7 +257,25 @@ window.links = [
     lag: 0,
   },
   {
+    predecessor: "121",
+    successor: "13",
+    type: "FS",
+    lag: 0,
+  },
+  {
+    predecessor: "121",
+    successor: "132",
+    type: "FS",
+    lag: 0,
+  },
+  {
     predecessor: "13",
+    successor: "13.1",
+    type: "FS",
+    lag: 0,
+  },
+  {
+    predecessor: "132",
     successor: "13.1",
     type: "FS",
     lag: 0,
