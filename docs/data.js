@@ -9,36 +9,36 @@ const data = [
         nested: [
           {
             id: "111",
-            duration: 5,
+            duration: 50,
             name: "1.1.1   Activity",
           },
           {
             id: "112",
             name: "1.1.2 Activity",
             progressDays: 1,
-            duration: 7,
+            duration: 70,
           },
         ],
       },
       {
         id: "12",
         name: "1.2 Activity",
-        duration: 4,
+        duration: 40,
       },
       {
         id: "121",
         name: "1.2.1 Activity",
-        duration: 4,
+        duration: 200,
       },
       {
         id: "13",
         name: "1.3 Activity",
-        duration: 6,
+        duration: 16,
       },
       {
         id: "132",
         name: "1.3.2 Activity",
-        duration: 6,
+        duration: 60,
       },
       {
         id: "13.1",
@@ -53,7 +53,7 @@ const data = [
       {
         id: "15",
         name: "1.5 Activity",
-        duration: 8,
+        duration: 18,
       },
       {
         id: "16",
@@ -63,7 +63,7 @@ const data = [
       {
         id: "17",
         name: "1.7 Activity",
-        progressDays: 3,
+        progressDays: 4,
         duration: 6,
       },
       {
@@ -87,7 +87,7 @@ const data = [
       {
         id: "21",
         name: "2.1 Activity",
-        duration: 10,
+        duration: 1000,
       },
       {
         id: "22",

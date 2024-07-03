@@ -42,10 +42,13 @@
   
   <wc-gantt id="gantt1">
     <div slot="top-left-corner" id="ctrls">
-      <select id="viewMode" style=" height: 30px;width: 100%;">
+      <select id="viewMode1" style=" height: 30px;width: 100%;">
         <option value="day">Day</option>
         <option value="week" selected>Week</option>
         <option value="month">Month</option>
+        <option value="quarter">Quarter</option>
+        <option value="year">Year</option>
+        <option value="auto">Auto</option>
       </select>
       <div>
         <input type="checkbox" id="showLinks" checked>
@@ -60,10 +63,12 @@
 
   <wc-gantt id="gantt2">
     <div slot="top-left-corner" id="ctrls">
-      <select id="viewMode" style=" height: 30px;width: 100%;">
+      <select id="viewMode2" style=" height: 30px;width: 100%;">
         <option value="day">Day</option>
         <option value="week" selected>Week</option>
         <option value="month">Month</option>
+        <option value="quarter">Quarter</option>
+        <option value="auto">Auto</option>
       </select>
       <div>
         <input type="checkbox" id="showLinks" checked>
@@ -147,16 +152,7 @@
           wcGantt.requestUpdate();
         });
 
-        function changeOptions(options) {
-          wcGantt.options = { ...opts, ...options };
-        }
-
-        const viewModeEl = document.querySelector("#viewMode");
-        viewModeEl.onchange = (e) => {
-          const timeScaleMode = e.target.value;
-          changeOptions({ timeScaleMode });
-        };
-
+    
         const showLinksEl =document.querySelector("#showLinks");
         showLinksEl.onchange = () => {
           const showDependencies = showLinksEl.checked;
@@ -164,11 +160,18 @@
         };
       }
 
-      // const showDelayEl = document.querySelector("#showDelay");
-      // showDelayEl.onchange = () => {
-      //   const showDelay = showDelayEl.checked;
-      //   changeOptions({ showDelay });
-      // };
+      const viewModeEl1 = document.querySelector("#viewMode1");
+        viewModeEl1.onchange = (e) => {
+          const timeScaleMode = e.target.value;
+          wcGantt1.options = { ...opts, ...wcGantt1.options, timeScaleMode };
+        };
+        const viewModeEl2 = document.querySelector("#viewMode2");
+        viewModeEl2.onchange = (e) => {
+          const timeScaleMode = e.target.value;
+          wcGantt2.options = { ...opts, ...wcGantt2.options, timeScaleMode };
+        };
+
+     
 
 
     }

@@ -156,7 +156,8 @@ export class WcGantt extends LitElement {
     this.timeScale = new TimeScale(
       dayjs(timeScaleStart).subtract(5, "days").toDate(),
       dayjs(this.schedule.endDate).add(7, "days").toDate(),
-      this.settings.timeScaleMode
+      this.settings.timeScaleMode,
+      this.settings.width
     );
 
     const widthOfData = this.timeScale.dateToPx(this.timeScale.end);

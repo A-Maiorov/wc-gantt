@@ -1,7 +1,14 @@
 import type { TimeScaleMode } from "./settings";
 
 const msPerDay = 86400000;
-
+const viewModeMultiplier: Record<TimeScaleMode, number> = {
+  auto: 0,
+  year: 30,
+  quarter: 20,
+  month: 4,
+  week: 2,
+  day: 1,
+};
 export class TimeScale {
   private _start: Date;
   get start() {
@@ -18,16 +25,12 @@ export class TimeScale {
     return this.pxPerDay * 7;
   }
 
-  viewPortWidth: number;
-
   get pxPerDay() {
-    const viewModeMultiplier: Record<TimeScaleMode, number> = {
-      month: 4,
-      week: 2,
-      day: 1,
-    };
+    if (this.viewMode === "auto") {
+      return this.viewPortWidth / this.totalDays;
+    }
 
-    let pxPerDay = 22;
+    let pxPerDay = 30;
     return Math.round(pxPerDay / viewModeMultiplier[this.viewMode]);
   }
 
@@ -48,7 +51,12 @@ export class TimeScale {
     return this.end.getTime();
   }
   public viewMode: TimeScaleMode;
-  constructor(start: Date, end: Date, viewMode: TimeScaleMode) {
+  constructor(
+    start: Date,
+    end: Date,
+    viewMode: TimeScaleMode,
+    private viewPortWidth: number
+  ) {
     this.viewMode = viewMode;
 
     this.start = start;

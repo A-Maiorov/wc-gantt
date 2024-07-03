@@ -11,6 +11,8 @@ import { svg } from "lit";
 import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
 import { BarBaseline } from "./barBaseline";
+import { QuarterHeader } from "./QuarterHeader";
+import { YearHeader } from "./YearHeader";
 
 export function Gantt(this: WcGantt) {
   const box = `0 0 ${this.settings.width} ${this.settings.height}`;
@@ -52,6 +54,20 @@ export function getHeader(this: WcGantt, settings: CompiledSettings) {
       break;
     case "week":
       res = WeekHeader.bind(this)();
+      break;
+    case "quarter":
+      res = QuarterHeader.bind(this)();
+      break;
+    case "year":
+      res = YearHeader.bind(this)();
+      break;
+    case "auto":
+      if (this.timeScale.totalDays <= 90) res = DayHeader.bind(this)();
+      else if (this.timeScale.totalDays <= 180) res = WeekHeader.bind(this)();
+      else if (this.timeScale.totalDays <= 365) res = MonthHeader.bind(this)();
+      else if (this.timeScale.totalDays <= 365 * 2)
+        res = QuarterHeader.bind(this)();
+      else res = YearHeader.bind(this)();
       break;
   }
 

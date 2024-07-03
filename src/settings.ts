@@ -1,4 +1,10 @@
-export type TimeScaleMode = "week" | "day" | "month";
+export type TimeScaleMode =
+  | "week"
+  | "day"
+  | "month"
+  | "quarter"
+  | "year"
+  | "auto";
 export class WcGanttSettings {
   disableSF = false;
   timeScaleMode: TimeScaleMode = "week";
