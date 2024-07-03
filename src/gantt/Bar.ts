@@ -104,7 +104,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
 
     const progressDate = dayjs(v.earlyStart)
-      .add(v.progressDays, "days")
+      .add(Math.min(v.progressDays, v.duration), "days")
       .toDate();
     const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
     let barCss = "gantt-bar";

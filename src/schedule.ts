@@ -114,14 +114,19 @@ export class Item implements IItem {
   }
 
   get delayDays(): number {
-    if (this.earlyStart >= new Date(new Date().setHours(0, 0, 0, 0))) return 0;
+    const today = new Date().setHours(0, 0, 0, 0);
+    const startsInFuture = this.earlyStart >= new Date(today);
+    if (startsInFuture) return 0;
 
-    const expectedProgress = dayjs(this.earlyFinish).diff(
+    const expectedProgressDate = Math.min(today, this.earlyFinish.getTime());
+
+    const expectedProgressDays = dayjs(expectedProgressDate).diff(
       this.earlyStart,
       "days"
     );
-    if (this.progressDays < expectedProgress) {
-      return expectedProgress - this.progressDays;
+
+    if (this.progressDays < expectedProgressDays) {
+      return expectedProgressDays - this.progressDays;
     }
     return 0;
   }
