@@ -153,9 +153,14 @@ export class WcGantt extends LitElement {
       this.baselineSchedule?.startDate.getTime() ?? Number.MAX_VALUE
     );
 
+    const timeScaleEnd = Math.max(
+      this.schedule.endDate.getTime(),
+      this.baselineSchedule?.endDate.getTime() ?? Number.MIN_VALUE
+    );
+
     this.timeScale = new TimeScale(
       dayjs(timeScaleStart).subtract(5, "days").toDate(),
-      dayjs(this.schedule.endDate).add(7, "days").toDate(),
+      dayjs(timeScaleEnd).add(7, "days").toDate(),
       this.settings.timeScaleMode,
       this.settings.width
     );
