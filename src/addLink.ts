@@ -1,4 +1,5 @@
 import { type WcGantt } from "./WcGantt";
+import { findNotAllowedItems } from "./circularReferences";
 import type { IDependency } from "./schedule";
 export type BeforeLinkAddedEvArgs = {
   link: IDependency;
@@ -71,6 +72,7 @@ export function configureAddLink(this: WcGantt) {
   let start: SVGCircleElement = null;
   let line: SVGLineElement = null;
   let hideFinish: boolean = false;
+  let notAllowedItems: Set<string> = new Set();
 
   const getControlX = (ctl: SVGCircleElement) => {
     const svgBar = ctl.parentElement as unknown as SVGSVGElement;
@@ -103,13 +105,26 @@ export function configureAddLink(this: WcGantt) {
         .forEach((e) => e.toggleAttribute("disabled", true));
     }
 
-    const potentialTargets = hideFinish
-      ? this.shadowRoot.querySelectorAll<SVGCircleElement>(
-          ".activity.ctl-start"
-        )
-      : this.shadowRoot.querySelectorAll<SVGCircleElement>(
-          ".activity.ctl-start,.activity.ctl-finish"
-        );
+    //PREVENT CIRCULAR REFERENCES
+
+    const sid = start.dataset["id"];
+    notAllowedItems = findNotAllowedItems(this.schedule, sid);
+    notAllowedItems.add(sid);
+
+    const existingDeps = this.schedule.dependencies.filter(
+      (x) => x.predecessor === sid
+    );
+    for (const e of existingDeps) notAllowedItems.add(e.successor);
+
+    const potentialTargets = Array.from(
+      hideFinish
+        ? this.shadowRoot.querySelectorAll<SVGCircleElement>(
+            ".activity.ctl-start"
+          )
+        : this.shadowRoot.querySelectorAll<SVGCircleElement>(
+            ".activity.ctl-start,.activity.ctl-finish"
+          )
+    ).filter((x) => !notAllowedItems.has(x.dataset["id"]));
 
     potentialTargets.forEach((elem) => {
       elem.toggleAttribute("active", true);
