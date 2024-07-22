@@ -196,7 +196,10 @@ export class Schedule {
       this.itemsIndex.set(x.id, x);
     });
 
-    this.dependencies = dependencies;
+    this.dependencies = dependencies.filter(
+      (x) =>
+        this.itemsIndex.has(x.predecessor) && this.itemsIndex.has(x.successor)
+    );
   }
 
   get endDate() {
