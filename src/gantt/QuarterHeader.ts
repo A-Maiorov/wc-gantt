@@ -66,7 +66,7 @@ export function QuarterHeader(this: WcGantt) {
           <text x=${textX} y=${
                 this.settings.scaleHeight * 0.75
               } class="text small">
-            ${currQ}
+            ${"Q" + currQ}
           </text>`
             : null
         }

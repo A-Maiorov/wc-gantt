@@ -18,11 +18,13 @@ export interface IItem {
   dataDate?: Date;
   defaultStartDate?: Date;
   nested?: IItem[];
+  color?: string;
 }
 
 export class Item implements IItem {
   constructor(private s: Schedule) {}
 
+  public color?: string;
   public nested: Item[] = [];
   public id: string = crypto.randomUUID();
   public name: string = this.id;
@@ -236,6 +238,7 @@ export class Schedule {
       ) {
         i.nested = [];
         i.type = "group";
+        i.color = item.color;
         i.nested = this._flattenItems(item.nested ?? []);
         flatArray.push(...i.nested);
       } else {

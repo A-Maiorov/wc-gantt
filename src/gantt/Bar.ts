@@ -16,6 +16,10 @@ function renderMilestone(
   v: Item
 ) {
   const halfBarHeight = barHeight / 2;
+
+  if (isNaN(x) || isNaN(halfBarHeight)) {
+    throw Error(`Invalid args: x: ${x}; barHeight: ${barHeight}`);
+  }
   const points = [
     [0, halfBarHeight],
     [halfBarHeight, 0],
@@ -103,6 +107,10 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
 
     const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
 
+    if (isNaN(w1)) {
+      throw Error("Invalid argument: v: " + v);
+    }
+
     const progressDate = dayjs(v.earlyStart)
       .add(Math.min(v.progressDays, v.duration), "days")
       .toDate();
@@ -127,10 +135,11 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
       x=${controlsOffset}
       y="1"
       width=${w1}
-      height=${v.type === "group" ? grHeight : settings.barHeight}
+      height=${v.type === "group" ? grHeight : settings.barHeight}    
       rx=${1.8}
       ry=${1.8}
       class=${borderCssClass}
+    
       @click=${handler}    
     />
     `;
@@ -292,6 +301,11 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         .item=${v}
         data-item-id=${v.id}        
         class=${barCss}
+        style=${
+          v.color
+            ? `--gantt-bar-group-back-fill: ${v.color}; --gantt-bar-inner-border-color:  ${v.color};`
+            : ""
+        }
        
       >      
         ${backBar}

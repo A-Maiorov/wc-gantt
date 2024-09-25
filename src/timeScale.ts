@@ -57,6 +57,13 @@ export class TimeScale {
     viewMode: TimeScaleMode,
     private viewPortWidth: number
   ) {
+    if (!(start instanceof Date) || isNaN(start.getTime())) {
+      throw Error(`Invalid argument: start`);
+    }
+    if (!(end instanceof Date) || isNaN(end.getTime())) {
+      throw Error(`Invalid argument: end`);
+    }
+
     this.viewMode = viewMode;
 
     this.start = start;

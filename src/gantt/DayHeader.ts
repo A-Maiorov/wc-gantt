@@ -10,6 +10,9 @@ export function DayHeader(this: WcGantt) {
 
   for (let day = 0; day <= scale.totalDays - 1; day++) {
     const x = day * scale.pxPerDay;
+
+    //if(isNaN(x))
+
     const textX = x + scale.pxPerDay / 2;
 
     const currDate = currentDay.getDate();
