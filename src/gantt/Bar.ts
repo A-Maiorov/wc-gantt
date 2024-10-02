@@ -303,7 +303,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         class=${barCss}
         style=${
           v.color
-            ? `--gantt-bar-group-back-fill: ${v.color}; --gantt-bar-inner-border-color:  ${v.color};`
+            ? `--gantt-bar-group-front-fill: ${v.color}; --gantt-bar-group-back-fill: ${v.color}; --gantt-bar-inner-border-color:  ${v.color};`
             : ""
         }
        

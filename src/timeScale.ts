@@ -78,8 +78,9 @@ export class TimeScale {
   }
 
   dateToPx(date: Date) {
-    const span = date.getTime() - this.startMs;
-    return this.msToPx(span);
+    let ms = date.getTime() - this.startMs;
+
+    return this.msToPx(ms);
   }
 
   pxToDate(px: number) {
@@ -88,7 +89,7 @@ export class TimeScale {
   }
 
   pxForTimeSpan(start: Date, end: Date) {
-    const span = end.getTime() - start.getTime();
+    let span = end.getTime() - start.getTime();
     return this.msToPx(span);
   }
 }

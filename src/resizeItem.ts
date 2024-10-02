@@ -12,15 +12,15 @@ export const resizeItem = (itm: Item, diffMs: number, resizeStart: boolean) => {
 
   if (resizeStart) {
     if (diffMs > 0) {
-      itm.duration = Math.max(itm.duration - diffDays, 1);
+      itm.setWorkingDaysDuration(Math.max(itm.duration - diffDays, 1));
     } else {
-      itm.duration += diffDays;
+      itm.setWorkingDaysDuration(itm.duration + diffDays);
     }
   } else {
     if (diffMs < 0) {
-      itm.duration = Math.max(itm.duration - diffDays, 1);
+      itm.setWorkingDaysDuration(Math.max(itm.duration - diffDays, 1));
     } else {
-      itm.duration += diffDays;
+      itm.setWorkingDaysDuration(itm.duration + diffDays);
     }
   }
 };
@@ -68,8 +68,6 @@ export function configureResizeItem(this: WcGantt) {
     // rectSvg = undefined;
     item = undefined;
     movingStarted = false;
-
-    this.suppressClick;
   };
 
   const cancelEvent = (e: MouseEvent) => {

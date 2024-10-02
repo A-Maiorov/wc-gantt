@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { findLongestPath } from "./criticalPath";
 export type ItemType = "activity" | "group" | "milestone" | "buffer";
 export interface IDependency {
@@ -6,6 +6,13 @@ export interface IDependency {
   successor: string;
   type: DependencyType;
   lag: number;
+}
+
+export interface ICalendar {
+  id: string;
+  name: string;
+  weekDays: [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
+  freeDays: { start: number; end: number }[];
 }
 
 export type DependencyType = "FS" | "FF" | "SS" | "SF";
@@ -19,6 +26,7 @@ export interface IItem {
   defaultStartDate?: Date;
   nested?: IItem[];
   color?: string;
+  calendar?: ICalendar;
 }
 
 export class Item implements IItem {
@@ -28,6 +36,13 @@ export class Item implements IItem {
   public nested: Item[] = [];
   public id: string = crypto.randomUUID();
   public name: string = this.id;
+
+  public calendar: ICalendar = {
+    name: "default",
+    id: "default",
+    weekDays: [true, true, true, true, true, true, true],
+    freeDays: [],
+  };
 
   public progressDays: number = 0;
   public type: ItemType = "activity";
@@ -40,12 +55,13 @@ export class Item implements IItem {
     );
   }
 
-  private _duration: number = 14;
-  public get duration() {
-    if (this.type === "milestone") return 0;
-    if (this.type !== "group") return this._duration;
+  private _durationWorkingDays: number = 14;
 
-    if (this.nested.length === 0) return 1;
+  public get durationWorkingDays() {
+    if (this.type === "milestone") return 0;
+    if (this.type !== "group") return this._durationWorkingDays;
+
+    if (this.nested.length === 0) return 0;
 
     const startTimes: number[] = [];
     const endTimes: number[] = [];
@@ -57,11 +73,37 @@ export class Item implements IItem {
     const minStart = Math.max(...startTimes);
     const maxEnd = Math.max(...endTimes);
 
+    return this.getWorkingDaysBetweenDates(new Date(minStart), new Date(maxEnd))
+      .length;
+  }
+
+  public get duration() {
+    if (this.type === "milestone") return 0;
+    if (this.type !== "group")
+      return dayjs(this.earlyFinish).diff(this.earlyStart, "days");
+
+    if (this.nested.length === 0) return 0;
+
+    const startTimes: number[] = [];
+    const endTimes: number[] = [];
+    for (const i of this.nested) {
+      startTimes.push(i.earlyStart.getTime());
+      endTimes.push(i.earlyFinish.getTime());
+    }
+
+    const minStart = Math.min(...startTimes);
+    const maxEnd = Math.max(...endTimes);
+
     return dayjs(maxEnd).diff(minStart, "days");
   }
 
-  public set duration(v: number) {
-    if (this.type !== "group" && this.type !== "milestone") this._duration = v;
+  // public set duration(workingDays: number) {
+  //   if (this.type !== "group" && this.type !== "milestone")
+  //     this._durationWorkingDays = workingDays;
+  // }
+  public setWorkingDaysDuration(workingDays: number) {
+    if (this.type !== "group" && this.type !== "milestone")
+      this._durationWorkingDays = workingDays;
   }
 
   crit: boolean = false;
@@ -73,6 +115,47 @@ export class Item implements IItem {
     return this.earlyFinish;
   }
 
+  private addDays(d: Date, days: number): Date {
+    let daysAdded = 0;
+
+    const sign = Math.sign(days);
+
+    d.setHours(0, 0, 0, 0);
+    let date = dayjs(d);
+    const inc = 1 * sign;
+    const absDays = Math.abs(days);
+
+    while (daysAdded < absDays) {
+      date = date.add(inc, "days");
+      const isFree = this.isFreeDay(date);
+      if (!isFree) daysAdded++;
+    }
+    return date.toDate();
+  }
+  private isFreeDay(d: Date | Dayjs): boolean {
+    let date = dayjs(d);
+    return (
+      this.calendar.weekDays[date.day()] === false ||
+      this.calendar.freeDays.some((fd) => {
+        return (
+          date.isAfter(dayjs(fd.start).subtract(1, "day"), "date") &&
+          date.isBefore(dayjs(fd.end).add(1, "day"), "date")
+        );
+      })
+    );
+  }
+
+  private getFirstWorkingDay(d: Date): Date {
+    let date = dayjs(d);
+    let isFree = this.isFreeDay(date);
+
+    while (isFree) {
+      date = date.add(1, "day");
+    }
+
+    return date.toDate();
+  }
+
   private __getEarlyStartBasedOnDependency(d: IDependency) {
     // this === successor
     const pred = this.s.itemsIndex.get(d.predecessor);
@@ -80,25 +163,34 @@ export class Item implements IItem {
 
     switch (d.type) {
       case "FS":
-        return dayjs(pred.earlyFinish).add(d.lag, "days").toDate();
+        return new Date(this.addDays(pred.earlyFinish, d.lag + 1));
       case "FF": {
-        const calculatedDate = dayjs(pred.earlyFinish)
-          .add(d.lag, "days")
-          .subtract(this.duration, "days")
-          .toDate()
-          .getTime();
+        const diff = d.lag - this.durationWorkingDays;
+
+        const calculatedDate = this.addDays(
+          pred.earlyFinish,
+          diff + 1
+        ).getTime();
+        // const calculatedDate = dayjs( pred.earlyFinish)
+        //   .add(d.lag, "days")
+        //   .subtract(this.duration, "days")
+        //   .toDate()
+        //   .getTime();
 
         return new Date(
           Math.max(this.defaultStartDate.getTime(), calculatedDate)
         );
       }
       case "SS":
-        return dayjs(pred.earlyStart).add(d.lag, "days").toDate();
-      case "SF":
-        return dayjs(pred.earlyStart)
-          .subtract(d.lag, "days")
-          .subtract(this.duration, "days")
-          .toDate();
+        return this.addDays(pred.earlyStart, d.lag);
+      case "SF": {
+        const diff = (d.lag + this.durationWorkingDays) * -1;
+        return this.addDays(pred.earlyStart, diff);
+        // return dayjs(pred.earlyStart)
+        //   .subtract(d.lag, "days")
+        //   .subtract(this.duration, "days")
+        //   .toDate();
+      }
     }
   }
 
@@ -106,13 +198,13 @@ export class Item implements IItem {
     return this.progressDays > 0;
   }
   public get defaultStartDate() {
-    return this.s.startDate;
+    return this.getFirstWorkingDay(this.s.startDate);
   }
 
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
     // this === predecessor
     const suc = this.s.itemsIndex.get(d.successor);
-    return dayjs(suc.earlyFinish).add(d.lag, "days").toDate();
+    return this.addDays(suc.earlyFinish, d.lag);
   }
 
   get delayDays(): number {
@@ -122,15 +214,34 @@ export class Item implements IItem {
 
     const expectedProgressDate = Math.min(today, this.earlyFinish.getTime());
 
-    const expectedProgressDays = dayjs(expectedProgressDate).diff(
+    //how many days between today and finish?
+    //how many days excluding free days?
+
+    const expectedProgressDays = this.getWorkingDaysBetweenDates(
       this.earlyStart,
-      "days"
-    );
+      new Date(expectedProgressDate)
+    ).length;
+    //  dayjs(expectedProgressDate).diff(
+    //   this.earlyStart,
+    //   "days"
+    // );
 
     if (this.progressDays < expectedProgressDays) {
       return expectedProgressDays - this.progressDays;
     }
     return 0;
+  }
+  private getWorkingDaysBetweenDates(start: Date, end: Date) {
+    const s = dayjs(start);
+    const e = dayjs(end);
+    let c = s;
+    const res: Date[] = [];
+    while (c.isBefore(e)) {
+      c = c.add(1, "day");
+      res.push(c.toDate());
+    }
+
+    return res;
   }
 
   get earlyStart(): Date {
@@ -140,11 +251,11 @@ export class Item implements IItem {
       );
     }
 
-    const predDeps = this.s.dependencies.filter(
+    const predDeps = (this.s.dependencies ?? []).filter(
       (x) => x.successor === this.id && x.type !== "SF"
     );
 
-    const succeedingDep = this.s.dependencies.filter(
+    const succeedingDep = (this.s.dependencies ?? []).filter(
       (x) => x.predecessor === this.id && x.type === "SF"
     );
 
@@ -160,7 +271,7 @@ export class Item implements IItem {
     );
     earlyStarts.push(...sfEarlyStarts);
 
-    return new Date(Math.max(...earlyStarts));
+    return this.getFirstWorkingDay(new Date(Math.max(...earlyStarts)));
   }
   get earlyFinish(): Date {
     if (this.type === "group") {
@@ -171,7 +282,9 @@ export class Item implements IItem {
 
     if (this.type === "milestone") return this.earlyStart;
 
-    return dayjs(this.earlyStart).add(this.duration, "days").toDate();
+    const res = this.addDays(this.earlyStart, this._durationWorkingDays - 1); // -1 in order to include earlyStart day
+    res.setHours(23, 59, 59, 999);
+    return res;
   }
 }
 
@@ -242,10 +355,11 @@ export class Schedule {
         i.nested = this._flattenItems(item.nested ?? []);
         flatArray.push(...i.nested);
       } else {
-        i.duration =
+        i.setWorkingDaysDuration(
           item.duration != undefined && item.duration > 0
             ? item.duration
-            : i.duration;
+            : i.duration
+        );
 
         i.progressDays = item.progressDays ?? 0;
         i.type = this.__nonGroups.includes(item.type) ? item.type : "activity";

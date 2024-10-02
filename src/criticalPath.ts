@@ -18,8 +18,8 @@ class TreeNode {
 
         const successorDate = this.__getSucDate(l);
 
-        //    l.predecessor === this.id &&
-        return currentEndWithLag.getTime() === successorDate;
+        const diff = successorDate - currentEndWithLag.getTime();
+        return diff === 1 || diff === 0;
       })
       .map((x) => new TreeNode(this.schedule, x.successor));
   }
