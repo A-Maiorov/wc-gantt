@@ -137,10 +137,10 @@ export class Item implements IItem {
     return (
       this.calendar.weekDays[date.day()] === false ||
       this.calendar.freeDays.some((fd) => {
-        return (
-          date.isAfter(dayjs(fd.start).subtract(1, "day"), "date") &&
-          date.isBefore(dayjs(fd.end).add(1, "day"), "date")
-        );
+        const start = dayjs(fd.start).toDate().setHours(0, 0, 0, 0);
+        const end = dayjs(fd.end).toDate().setHours(23, 59, 59, 999);
+        const dMs = dayjs(d).toDate().getTime();
+        return dMs >= start && dMs <= end;
       })
     );
   }
@@ -171,11 +171,6 @@ export class Item implements IItem {
           pred.earlyFinish,
           diff + 1
         ).getTime();
-        // const calculatedDate = dayjs( pred.earlyFinish)
-        //   .add(d.lag, "days")
-        //   .subtract(this.duration, "days")
-        //   .toDate()
-        //   .getTime();
 
         return new Date(
           Math.max(this.defaultStartDate.getTime(), calculatedDate)
@@ -186,10 +181,6 @@ export class Item implements IItem {
       case "SF": {
         const diff = (d.lag + this.durationWorkingDays) * -1;
         return this.addDays(pred.earlyStart, diff);
-        // return dayjs(pred.earlyStart)
-        //   .subtract(d.lag, "days")
-        //   .subtract(this.duration, "days")
-        //   .toDate();
       }
     }
   }
@@ -355,6 +346,8 @@ export class Schedule {
         i.nested = this._flattenItems(item.nested ?? []);
         flatArray.push(...i.nested);
       } else {
+        if (item.calendar) i.calendar = item.calendar;
+
         i.setWorkingDaysDuration(
           item.duration != undefined && item.duration > 0
             ? item.duration
