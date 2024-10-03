@@ -12,7 +12,12 @@ export interface ICalendar {
   id: string;
   name: string;
   weekDays: [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
-  freeDays: { start: number; end: number }[];
+  freeDays: {
+    start: number;
+    end: number;
+    nextWorkingDay?: number;
+    previousWorkingDay?: number;
+  }[];
 }
 
 export type DependencyType = "FS" | "FF" | "SS" | "SF";
@@ -37,12 +42,50 @@ export class Item implements IItem {
   public id: string = crypto.randomUUID();
   public name: string = this.id;
 
-  public calendar: ICalendar = {
+  public _calendar: ICalendar = {
     name: "default",
     id: "default",
     weekDays: [true, true, true, true, true, true, true],
     freeDays: [],
   };
+
+  get calendar() {
+    return this._calendar;
+  }
+
+  set calendar(c: ICalendar | undefined) {
+    if (!c) {
+      this._calendar = {
+        name: "default",
+        id: "default",
+        weekDays: [true, true, true, true, true, true, true],
+        freeDays: [],
+      };
+      return;
+    }
+
+    if (c.weekDays.every((x) => x === false))
+      throw Error(
+        "Invalid calendar: should have at least 1 working day of week"
+      );
+
+    this._calendar = structuredClone(c);
+
+    for (const fd of this._calendar.freeDays) {
+      fd.start = new Date(fd.start).setHours(0, 0, 0, 0);
+      fd.end = new Date(fd.end).setHours(23, 59, 59, 999);
+
+      fd.nextWorkingDay = dayjs(fd.end)
+        .add(1, "day")
+        .toDate()
+        .setHours(0, 0, 0, 0);
+
+      fd.previousWorkingDay = dayjs(fd.start)
+        .subtract(1, "day")
+        .toDate()
+        .setHours(0, 0, 0, 0);
+    }
+  }
 
   public progressDays: number = 0;
   public type: ItemType = "activity";
@@ -97,10 +140,6 @@ export class Item implements IItem {
     return dayjs(maxEnd).diff(minStart, "days");
   }
 
-  // public set duration(workingDays: number) {
-  //   if (this.type !== "group" && this.type !== "milestone")
-  //     this._durationWorkingDays = workingDays;
-  // }
   public setWorkingDaysDuration(workingDays: number) {
     if (this.type !== "group" && this.type !== "milestone")
       this._durationWorkingDays = workingDays;
@@ -118,47 +157,58 @@ export class Item implements IItem {
   private addDays(d: Date, days: number): Date {
     let daysAdded = 0;
 
-    const sign = Math.sign(days);
+    const sign = Math.sign(days) as 1 | -1;
 
     d.setHours(0, 0, 0, 0);
-    let date = dayjs(d);
+    let date = d;
     const inc = 1 * sign;
     const absDays = Math.abs(days);
 
     while (daysAdded < absDays) {
-      date = date.add(inc, "days");
-      const isFree = this.isFreeDay(date);
-      if (!isFree) daysAdded++;
+      date.setDate(date.getDate() + inc);
+      const nextWd = new Date(this.getNextWorkingDay(date, sign));
+
+      if (date.getTime() === nextWd.getTime()) daysAdded++;
     }
-    return date.toDate();
-  }
-  private isFreeDay(d: Date | Dayjs): boolean {
-    let date = dayjs(d);
-    return (
-      this.calendar.weekDays[date.day()] === false ||
-      this.calendar.freeDays.some((fd) => {
-        const start = dayjs(fd.start).toDate().setHours(0, 0, 0, 0);
-        const end = dayjs(fd.end).toDate().setHours(23, 59, 59, 999);
-        const dMs = dayjs(d).toDate().getTime();
-        return dMs >= start && dMs <= end;
-      })
-    );
+    return date;
   }
 
-  private getFirstWorkingDay(d: Date): Date {
+  private getNextWorkingDay(d: Date | Dayjs, direction: -1 | 1 = 1) {
     let date = dayjs(d);
-    let isFree = this.isFreeDay(date);
 
-    while (isFree) {
-      date = date.add(1, "day");
+    let nextWorkingDay: number = date.toDate().getTime();
+
+    let isChanged = true;
+
+    while (isChanged === true) {
+      const initialValue = nextWorkingDay;
+
+      for (const fd of this.calendar.freeDays) {
+        const dMs = nextWorkingDay;
+        if (dMs >= fd.start && dMs <= fd.end) {
+          nextWorkingDay =
+            direction === 1 ? fd.nextWorkingDay : fd.previousWorkingDay;
+        }
+      }
+
+      let isFreeWeekday =
+        this.calendar.weekDays[new Date(nextWorkingDay).getDay()] === false;
+
+      while (isFreeWeekday == true) {
+        const nd = new Date(nextWorkingDay);
+        nextWorkingDay = nd.setDate(nd.getDate() + direction);
+        isFreeWeekday = this.calendar.weekDays[nd.getDay()] === false;
+      }
+
+      isChanged = initialValue !== nextWorkingDay;
     }
 
-    return date.toDate();
+    return nextWorkingDay;
   }
 
   private __getEarlyStartBasedOnDependency(d: IDependency) {
-    // this === successor
     const pred = this.s.itemsIndex.get(d.predecessor);
+
     if (!pred) return this.defaultStartDate;
 
     switch (d.type) {
@@ -188,8 +238,9 @@ export class Item implements IItem {
   public get isStarted() {
     return this.progressDays > 0;
   }
+
   public get defaultStartDate() {
-    return this.getFirstWorkingDay(this.s.startDate);
+    return new Date(this.getNextWorkingDay(this.s.startDate));
   }
 
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
@@ -250,9 +301,9 @@ export class Item implements IItem {
       (x) => x.predecessor === this.id && x.type === "SF"
     );
 
-    if (predDeps.length === 0 && succeedingDep.length === 0)
+    if (predDeps.length === 0 && succeedingDep.length === 0) {
       return this.defaultStartDate;
-
+    }
     const earlyStarts = predDeps.map((pd) =>
       this.__getEarlyStartBasedOnDependency(pd).getTime()
     );
@@ -262,7 +313,9 @@ export class Item implements IItem {
     );
     earlyStarts.push(...sfEarlyStarts);
 
-    return this.getFirstWorkingDay(new Date(Math.max(...earlyStarts)));
+    const res = this.getNextWorkingDay(new Date(Math.max(...earlyStarts)));
+
+    return new Date(res);
   }
   get earlyFinish(): Date {
     if (this.type === "group") {
@@ -275,6 +328,7 @@ export class Item implements IItem {
 
     const res = this.addDays(this.earlyStart, this._durationWorkingDays - 1); // -1 in order to include earlyStart day
     res.setHours(23, 59, 59, 999);
+
     return res;
   }
 }
@@ -309,9 +363,9 @@ export class Schedule {
   }
 
   get endDate() {
-    return new Date(
-      Math.max(...this.items.map((x) => x.earlyFinish.getTime()))
-    );
+    const ef = this.items.map((x) => x.earlyFinish.getTime());
+
+    return new Date(Math.max(...ef));
   }
 
   get durationDays() {
