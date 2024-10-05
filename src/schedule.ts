@@ -154,7 +154,7 @@ export class Item implements IItem {
     return this.earlyFinish;
   }
 
-  private addDays(d: Date, days: number): Date {
+  public addDays(d: Date, days: number): Date {
     let daysAdded = 0;
 
     const sign = Math.sign(days) as 1 | -1;

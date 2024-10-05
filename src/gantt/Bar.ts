@@ -4,7 +4,6 @@ import { repeat } from "lit/directives/repeat.js";
 import { WcGantt } from "../WcGantt";
 import type { CompiledSettings } from "../settings";
 import type { Item } from "../schedule";
-import dayjs from "dayjs";
 
 function renderMilestone(
   this: WcGantt,
@@ -111,9 +110,15 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
       throw Error("Invalid argument: v: " + v);
     }
 
-    const progressDate = dayjs(v.earlyStart)
-      .add(Math.min(v.progressDays, v.duration), "days")
-      .toDate();
+    const progressDate = v.addDays(
+      v.earlyStart,
+      Math.min(v.progressDays, v.duration)
+    );
+
+    // dayjs(v.earlyStart)
+    //   .add(Math.min(v.progressDays, v.duration), "days")
+    //   .toDate();
+
     const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
     let barCss = "gantt-bar";
     barCss += v.type === "group" ? " group" : "";
