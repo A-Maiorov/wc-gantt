@@ -154,7 +154,8 @@ export class Item implements IItem {
     return this.earlyFinish;
   }
 
-  public addDays(d: Date, days: number): Date {
+  public addDays(startDate: number, days: number): Date {
+    const d = new Date(startDate);
     let daysAdded = 0;
 
     const sign = Math.sign(days) as 1 | -1;
@@ -213,12 +214,12 @@ export class Item implements IItem {
 
     switch (d.type) {
       case "FS":
-        return new Date(this.addDays(pred.earlyFinish, d.lag + 1));
+        return new Date(this.addDays(pred.earlyFinish.getTime(), d.lag + 1));
       case "FF": {
         const diff = d.lag - this.durationWorkingDays;
 
         const calculatedDate = this.addDays(
-          pred.earlyFinish,
+          pred.earlyFinish.getTime(),
           diff + 1
         ).getTime();
 
@@ -227,10 +228,10 @@ export class Item implements IItem {
         );
       }
       case "SS":
-        return this.addDays(pred.earlyStart, d.lag);
+        return this.addDays(pred.earlyStart.getTime(), d.lag);
       case "SF": {
         const diff = (d.lag + this.durationWorkingDays) * -1;
-        return this.addDays(pred.earlyStart, diff);
+        return this.addDays(pred.earlyStart.getTime(), diff);
       }
     }
   }
@@ -246,7 +247,7 @@ export class Item implements IItem {
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
     // this === predecessor
     const suc = this.s.itemsIndex.get(d.successor);
-    return this.addDays(suc.earlyFinish, d.lag);
+    return this.addDays(suc.earlyFinish.getTime(), d.lag);
   }
 
   get delayDays(): number {
@@ -286,7 +287,9 @@ export class Item implements IItem {
     return res;
   }
 
-  get earlyStart(): Date {
+  private _earlyStart: Date | undefined = undefined;
+
+  private _calcEarlyStart() {
     if (this.type === "group") {
       return new Date(
         Math.min(...this.nested.map((x) => x.earlyStart.getTime()))
@@ -317,7 +320,21 @@ export class Item implements IItem {
 
     return new Date(res);
   }
-  get earlyFinish(): Date {
+  public refreshStartEnd() {
+    this._earlyStart = this._calcEarlyStart();
+    this._earlyFinish = this._calcEarlyFinish();
+  }
+
+  get earlyStart(): Date {
+    if (!this._earlyStart) {
+      this._earlyStart = this._calcEarlyStart();
+    }
+    return this._earlyStart;
+  }
+
+  private _earlyFinish: Date | undefined;
+
+  private _calcEarlyFinish() {
     if (this.type === "group") {
       return new Date(
         Math.max(...this.nested.map((x) => x.earlyFinish.getTime()))
@@ -326,10 +343,20 @@ export class Item implements IItem {
 
     if (this.type === "milestone") return this.earlyStart;
 
-    const res = this.addDays(this.earlyStart, this._durationWorkingDays - 1); // -1 in order to include earlyStart day
+    const res = this.addDays(
+      this.earlyStart.getTime(),
+      this._durationWorkingDays - 1
+    ); // -1 in order to include earlyStart day
     res.setHours(23, 59, 59, 999);
 
     return res;
+  }
+
+  get earlyFinish(): Date {
+    if (!this._earlyFinish) {
+      this._earlyFinish = this._calcEarlyFinish();
+    }
+    return this._earlyFinish;
   }
 }
 
@@ -360,6 +387,10 @@ export class Schedule {
       (x) =>
         this.itemsIndex.has(x.predecessor) && this.itemsIndex.has(x.successor)
     );
+
+    for (const i of this.items) {
+      i.refreshStartEnd();
+    }
   }
 
   get endDate() {
