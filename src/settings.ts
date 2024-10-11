@@ -15,6 +15,10 @@ export class WcGanttSettings {
   startDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
   dataDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
   baselineDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
+
+  enableChartInteractions = true;
+
+  defaultActivityDurationWorkingDays = 14;
 }
 
 export interface CompiledSettings extends WcGanttSettings {

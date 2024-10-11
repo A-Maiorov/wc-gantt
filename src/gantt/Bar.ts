@@ -211,7 +211,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     }
     let controls = svg``;
 
-    if (v.type === "activity")
+    if (this.settings.enableChartInteractions === true && v.type === "activity")
       controls = svg`
         <circle
           class=${v.type + " ctl-start"}

@@ -123,7 +123,8 @@ export class WcGantt extends LitElement {
         this.settings.startDate,
         this.settings.dataDate,
         this.items ?? [],
-        this.dependencies ?? []
+        this.dependencies ?? [],
+        this.settings.defaultActivityDurationWorkingDays
       );
 
       if (this.baselineItems.length > 0)
@@ -242,7 +243,12 @@ export class WcGantt extends LitElement {
   private interactionReady = false;
 
   private async setupInteractions() {
-    if (this.interactionReady) return;
+    if (
+      this.settings.enableChartInteractions === false ||
+      this.interactionReady
+    )
+      return;
+
     await this.updateComplete;
     configureAddLink.bind(this)();
     configureResizeItem.bind(this)();

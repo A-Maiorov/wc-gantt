@@ -22,7 +22,7 @@ export const styles = css`
   }
   .gantt-v {
     overflow: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     display: flex;
     height: 100%;
   }

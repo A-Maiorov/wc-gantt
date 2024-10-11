@@ -98,7 +98,7 @@ export class Item implements IItem {
     );
   }
 
-  private _durationWorkingDays: number = 14;
+  private _durationWorkingDays: number = this.s.defaultActivityDurationDays;
 
   public get durationWorkingDays() {
     if (this.type === "milestone") return 0;
@@ -240,8 +240,17 @@ export class Item implements IItem {
     return this.progressDays > 0;
   }
 
+  public set defaultStartDate(value: Date) {
+    this._defaultStartDate = value.getTime();
+  }
+  private _defaultStartDate?: number;
   public get defaultStartDate() {
-    return new Date(this.getNextWorkingDay(this.s.startDate));
+    if (this._defaultStartDate == undefined) {
+      this._defaultStartDate = new Date(
+        this.getNextWorkingDay(this.s.startDate)
+      ).getTime();
+    }
+    return new Date(this._defaultStartDate);
   }
 
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
@@ -371,7 +380,8 @@ export class Schedule {
     startDate: Date,
     dataDate: Date,
     items: IItem[],
-    dependencies: IDependency[]
+    dependencies: IDependency[],
+    public defaultActivityDurationDays = 14
   ) {
     this.startDate = new Date(startDate.setHours(0, 0, 0, 0));
     this.dataDate = new Date(dataDate.setHours(0, 0, 0, 0));
@@ -432,6 +442,8 @@ export class Schedule {
         flatArray.push(...i.nested);
       } else {
         if (item.calendar) i.calendar = item.calendar;
+        if (item.defaultStartDate != undefined)
+          i.defaultStartDate = item.defaultStartDate;
 
         i.setWorkingDaysDuration(
           item.duration != undefined && item.duration > 0
