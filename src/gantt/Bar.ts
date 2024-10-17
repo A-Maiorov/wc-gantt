@@ -112,7 +112,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
 
     const progressDate = v.addDays(
       v.earlyStart.getTime(),
-      Math.min(v.progressDays, v.duration)
+      Math.min(v.progressDays, v.durationWorkingDays)
     );
 
     // dayjs(v.earlyStart)
