@@ -240,8 +240,14 @@ export class Item implements IItem {
     return this.progressDays > 0;
   }
 
-  public set defaultStartDate(value: Date) {
-    this._defaultStartDate = value.getTime();
+  public set defaultStartDate(value: Date | undefined) {
+    const invalidValue =
+      value == undefined ||
+      value.getTime == undefined ||
+      isNaN(value.getTime());
+    this._defaultStartDate = !invalidValue
+      ? new Date(this.getNextWorkingDay(value)).getTime()
+      : new Date(this.getNextWorkingDay(this.s.startDate)).getTime();
   }
   private _defaultStartDate?: number;
   public get defaultStartDate() {
