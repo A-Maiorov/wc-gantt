@@ -14,21 +14,31 @@ class TreeNode {
 
         const currentEndWithLag = dayjs(current.earlyFinish)
           .add(l.lag, "days")
-          .toDate();
+          .toDate()
+          .setHours(0, 0, 0, 0);
 
-        const successorDate = this.__getSucDate(l);
+        const successorDate = this.__getSucDate(l).setHours(0, 0, 0, 0);
 
-        const diff = successorDate - currentEndWithLag.getTime();
-        return diff === 1 || diff === 0;
+        const diff = successorDate - currentEndWithLag;
+        const isConsequent = diff === 1 || diff === 0;
+        if (isConsequent) return true;
+
+        const successor = this.schedule.itemsIndex.get(l.successor);
+        const isGapIncludingOnlyFreeDays =
+          successor.getNextWorkingDay(
+            dayjs(currentEndWithLag).add(1, "day")
+          ) === successorDate;
+
+        return isGapIncludingOnlyFreeDays;
       })
       .map((x) => new TreeNode(this.schedule, x.successor));
   }
 
   private __getSucDate(l: IDependency) {
     const successor = this.schedule.itemsIndex.get(l.successor);
-    if (l.type.endsWith("F")) return successor.earlyFinish.getTime();
+    if (l.type.endsWith("F")) return successor.earlyFinish;
 
-    if (l.type.endsWith("S")) return successor.earlyStart.getTime();
+    if (l.type.endsWith("S")) return successor.earlyStart;
   }
 
   constructor(protected schedule: Schedule, public id: string) {}

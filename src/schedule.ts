@@ -37,6 +37,16 @@ export interface IItem {
 export class Item implements IItem {
   constructor(private s: Schedule) {}
 
+  private _execOrder = -1;
+
+  public set execOrder(v: number) {
+    this._execOrder = this.type === "group" ? Number.MAX_VALUE : v;
+  }
+
+  public get execOrder() {
+    return this.type === "group" ? Number.MAX_VALUE : this._execOrder;
+  }
+
   public color?: string;
   public nested: Item[] = [];
   public id: string = crypto.randomUUID();
@@ -88,6 +98,7 @@ export class Item implements IItem {
   }
 
   public progressDays: number = 0;
+
   public type: ItemType = "activity";
 
   public get dataDate() {
@@ -174,7 +185,7 @@ export class Item implements IItem {
     return date;
   }
 
-  private getNextWorkingDay(d: Date | Dayjs, direction: -1 | 1 = 1) {
+  public getNextWorkingDay(d: Date | Dayjs, direction: -1 | 1 = 1) {
     let date = dayjs(d);
 
     let nextWorkingDay: number = date.toDate().getTime();
@@ -207,20 +218,37 @@ export class Item implements IItem {
     return nextWorkingDay;
   }
 
+  isNotWorkingDay(d: Date) {
+    let isFreeDay = false;
+    for (const fd of this.calendar.freeDays) {
+      const dMs = d.getTime();
+      if (dMs >= fd.start && dMs <= fd.end) {
+        isFreeDay = true;
+        break;
+      }
+    }
+
+    let isFreeWeekday = this.calendar.weekDays[d.getDay()] === false;
+    return isFreeDay || isFreeWeekday;
+  }
+
   private __getEarlyStartBasedOnDependency(d: IDependency) {
     const pred = this.s.itemsIndex.get(d.predecessor);
 
     if (!pred) return this.defaultStartDate;
-
+    const addDays = pred.type === "milestone" ? 0 : 1;
     switch (d.type) {
-      case "FS":
-        return new Date(this.addDays(pred.earlyFinish.getTime(), d.lag + 1));
+      case "FS": {
+        return new Date(
+          this.addDays(pred.earlyFinish.getTime(), d.lag + addDays)
+        );
+      }
       case "FF": {
         const diff = d.lag - this.durationWorkingDays;
 
         const calculatedDate = this.addDays(
           pred.earlyFinish.getTime(),
-          diff + 1
+          diff + addDays
         ).getTime();
 
         return new Date(
@@ -246,8 +274,8 @@ export class Item implements IItem {
       value.getTime == undefined ||
       isNaN(value.getTime());
     this._defaultStartDate = !invalidValue
-      ? new Date(this.getNextWorkingDay(value)).getTime()
-      : new Date(this.getNextWorkingDay(this.s.startDate)).getTime();
+      ? new Date(this.getNextWorkingDay(value)).setHours(0, 0, 0, 0)
+      : new Date(this.getNextWorkingDay(this.s.startDate)).setHours(0, 0, 0, 0);
   }
   private _defaultStartDate?: number;
   public get defaultStartDate() {
@@ -351,20 +379,24 @@ export class Item implements IItem {
 
   private _calcEarlyFinish() {
     if (this.type === "group") {
-      return new Date(
+      this._earlyFinish = new Date(
         Math.max(...this.nested.map((x) => x.earlyFinish.getTime()))
       );
+      return this._earlyFinish;
     }
 
-    if (this.type === "milestone") return this.earlyStart;
+    if (this.type === "milestone") {
+      this._earlyFinish = this.earlyStart;
+      return this._earlyFinish;
+    }
 
     const res = this.addDays(
       this.earlyStart.getTime(),
       this._durationWorkingDays - 1
     ); // -1 in order to include earlyStart day
     res.setHours(23, 59, 59, 999);
-
-    return res;
+    this._earlyFinish = res;
+    return this._earlyFinish;
   }
 
   get earlyFinish(): Date {
@@ -379,8 +411,8 @@ export class Schedule {
   startDate: Date = new Date();
   dataDate: Date = new Date();
   itemsIndex: Map<string, Item>;
-  items: Item[];
-  dependencies: IDependency[];
+  items: Item[] = [];
+  dependencies: IDependency[] = [];
 
   constructor(
     startDate: Date,
@@ -395,6 +427,7 @@ export class Schedule {
     this.itemsIndex = new Map<string, Item>();
 
     this.items = this._flattenItems(items);
+
     this.items.forEach((x) => {
       this.itemsIndex.set(x.id, x);
     });
@@ -404,7 +437,12 @@ export class Schedule {
         this.itemsIndex.has(x.predecessor) && this.itemsIndex.has(x.successor)
     );
 
-    for (const i of this.items) {
+    this.items.forEach((x) => {
+      this.itemsIndex.set(x.id, x);
+      x.execOrder = this.getExecutionOrder(x);
+    });
+
+    for (const i of [...this.items].sort((a, b) => a.execOrder - b.execOrder)) {
       i.refreshStartEnd();
     }
   }
@@ -424,6 +462,23 @@ export class Schedule {
     "buffer",
     "milestone",
   ] as ItemType[];
+
+  private getExecutionOrder(i: Item) {
+    let deps = this.dependencies.filter((x) => x.successor === i.id);
+
+    const orders: number[] = [];
+    for (const endDep of deps) {
+      let dep = endDep;
+      const successors = new Set();
+      while (dep != undefined && successors.has(dep.predecessor)) {
+        successors.add(dep.successor);
+        dep = this.dependencies.find((x) => x.successor === dep.predecessor);
+      }
+
+      orders.push(successors.size);
+    }
+    return Math.max(...orders);
+  }
 
   private _flattenItems(items: IItem[]): Item[] {
     const flatArray: Item[] = [];
