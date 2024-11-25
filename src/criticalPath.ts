@@ -25,9 +25,8 @@ class TreeNode {
 
         const successor = this.schedule.itemsIndex.get(l.successor);
         const isGapIncludingOnlyFreeDays =
-          successor.getNextWorkingDay(
-            dayjs(currentEndWithLag).add(1, "day")
-          ) === successorDate;
+          successor.getNextWorkingDay(new Date(currentEndWithLag)).getTime() ===
+          successorDate;
 
         return isGapIncludingOnlyFreeDays;
       })

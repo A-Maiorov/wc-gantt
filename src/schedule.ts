@@ -1,4 +1,4 @@
-import dayjs, { type Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { findLongestPath } from "./criticalPath";
 export type ItemType = "activity" | "group" | "milestone" | "buffer";
 export interface IDependency {
@@ -165,60 +165,70 @@ export class Item implements IItem {
     return this.earlyFinish;
   }
 
-  public addDays(startDate: number, days: number): Date {
+  public addWorkingDays(startDate: number, days: number): Date {
     const d = new Date(startDate);
-    let daysAdded = 0;
 
     const sign = Math.sign(days) as 1 | -1;
 
     d.setHours(0, 0, 0, 0);
     let date = d;
-    const inc = 1 * sign;
+
     const absDays = Math.abs(days);
 
-    while (daysAdded < absDays) {
-      date.setDate(date.getDate() + inc);
-      const nextWd = new Date(this.getNextWorkingDay(date, sign));
-
-      if (date.getTime() === nextWd.getTime()) daysAdded++;
+    for (let daysAdded = 0; daysAdded < absDays; daysAdded++) {
+      date = new Date(this.getNextWorkingDay(date, sign));
     }
+
     return date;
   }
 
-  public getNextWorkingDay(d: Date | Dayjs, direction: -1 | 1 = 1) {
-    let date = dayjs(d);
-
-    let nextWorkingDay: number = date.toDate().getTime();
-
-    let isChanged = true;
-
-    while (isChanged === true) {
-      const initialValue = nextWorkingDay;
-
-      for (const fd of this.calendar.freeDays) {
-        const dMs = nextWorkingDay;
-        if (dMs >= fd.start && dMs <= fd.end) {
-          nextWorkingDay =
-            direction === 1 ? fd.nextWorkingDay : fd.previousWorkingDay;
-        }
-      }
-
-      let isFreeWeekday =
-        this.calendar.weekDays[new Date(nextWorkingDay).getDay()] === false;
-
-      while (isFreeWeekday == true) {
-        const nd = new Date(nextWorkingDay);
-        nextWorkingDay = nd.setDate(nd.getDate() + direction);
-        isFreeWeekday = this.calendar.weekDays[nd.getDay()] === false;
-      }
-
-      isChanged = initialValue !== nextWorkingDay;
-    }
-
-    return nextWorkingDay;
+  private getWorkingDay(d: number) {
+    const date = new Date(d);
+    date.setHours(0, 0, 0, 0);
+    if (this.isWorkingDay(date)) return date;
+    else this.getNextWorkingDay(date);
   }
 
-  isNotWorkingDay(d: Date) {
+  public getNextWorkingDay(d: Date, direction: -1 | 1 = 1) {
+    const currentDate = new Date(d);
+
+    currentDate.setDate(currentDate.getDate() + direction);
+    while (!this.isWorkingDay(currentDate)) {
+      currentDate.setDate(currentDate.getDate() + direction);
+    }
+    return currentDate;
+
+    // let nextWorkingDay: number = date.toDate().getTime();
+
+    // let isChanged = true;
+
+    // while (isChanged === true) {
+    //   const initialValue = nextWorkingDay;
+
+    //   for (const fd of this.calendar.freeDays) {
+    //     const dMs = nextWorkingDay;
+    //     if (dMs >= fd.start && dMs <= fd.end) {
+    //       nextWorkingDay =
+    //         direction === 1 ? fd.nextWorkingDay : fd.previousWorkingDay;
+    //     }
+    //   }
+
+    //   let isFreeWeekday =
+    //     this.calendar.weekDays[new Date(nextWorkingDay).getDay()] === false;
+
+    //   while (isFreeWeekday == true) {
+    //     const nd = new Date(nextWorkingDay);
+    //     nextWorkingDay = nd.setDate(nd.getDate() + direction);
+    //     isFreeWeekday = this.calendar.weekDays[nd.getDay()] === false;
+    //   }
+
+    //   isChanged = initialValue !== nextWorkingDay;
+    // }
+
+    // return nextWorkingDay;
+  }
+
+  isWorkingDay(d: Date) {
     let isFreeDay = false;
     for (const fd of this.calendar.freeDays) {
       const dMs = d.getTime();
@@ -229,7 +239,7 @@ export class Item implements IItem {
     }
 
     let isFreeWeekday = this.calendar.weekDays[d.getDay()] === false;
-    return isFreeDay || isFreeWeekday;
+    return !isFreeDay && !isFreeWeekday;
   }
 
   private __getEarlyStartBasedOnDependency(d: IDependency) {
@@ -240,13 +250,13 @@ export class Item implements IItem {
     switch (d.type) {
       case "FS": {
         return new Date(
-          this.addDays(pred.earlyFinish.getTime(), d.lag + addDays)
+          this.addWorkingDays(pred.earlyFinish.getTime(), d.lag + addDays)
         );
       }
       case "FF": {
         const diff = d.lag - this.durationWorkingDays;
 
-        const calculatedDate = this.addDays(
+        const calculatedDate = this.addWorkingDays(
           pred.earlyFinish.getTime(),
           diff + addDays
         ).getTime();
@@ -256,10 +266,10 @@ export class Item implements IItem {
         );
       }
       case "SS":
-        return this.addDays(pred.earlyStart.getTime(), d.lag);
+        return this.addWorkingDays(pred.earlyStart.getTime(), d.lag);
       case "SF": {
         const diff = (d.lag + this.durationWorkingDays) * -1;
-        return this.addDays(pred.earlyStart.getTime(), diff);
+        return this.addWorkingDays(pred.earlyStart.getTime(), diff);
       }
     }
   }
@@ -274,14 +284,14 @@ export class Item implements IItem {
       value.getTime == undefined ||
       isNaN(value.getTime());
     this._defaultStartDate = !invalidValue
-      ? new Date(this.getNextWorkingDay(value)).setHours(0, 0, 0, 0)
-      : new Date(this.getNextWorkingDay(this.s.startDate)).setHours(0, 0, 0, 0);
+      ? this.getWorkingDay(value.getTime()).setHours(0, 0, 0, 0)
+      : this.getWorkingDay(this.s.startDate.getTime()).setHours(0, 0, 0, 0);
   }
   private _defaultStartDate?: number;
   public get defaultStartDate() {
     if (this._defaultStartDate == undefined) {
       this._defaultStartDate = new Date(
-        this.getNextWorkingDay(this.s.startDate)
+        this.getWorkingDay(this.s.startDate.getTime())
       ).getTime();
     }
     return new Date(this._defaultStartDate);
@@ -290,13 +300,14 @@ export class Item implements IItem {
   private __getEarlyStartBasedOnSFDependency(d: IDependency) {
     // this === predecessor
     const suc = this.s.itemsIndex.get(d.successor);
-    return this.addDays(suc.earlyFinish.getTime(), d.lag);
+    return this.addWorkingDays(suc.earlyFinish.getTime(), d.lag);
   }
 
   get delayDays(): number {
     const today = new Date().setHours(0, 0, 0, 0);
     const startsInFuture = this.earlyStart >= new Date(today);
-    if (startsInFuture) return 0;
+    const isFinished = this.durationWorkingDays === this.progressDays;
+    if (startsInFuture || isFinished) return 0;
 
     const expectedProgressDate = Math.min(today, this.earlyFinish.getTime());
 
@@ -359,13 +370,22 @@ export class Item implements IItem {
     );
     earlyStarts.push(...sfEarlyStarts);
 
-    const res = this.getNextWorkingDay(new Date(Math.max(...earlyStarts)));
+    const res = this.getWorkingDay(Math.max(...earlyStarts));
 
     return new Date(res);
   }
   public refreshStartEnd() {
     this._earlyStart = this._calcEarlyStart();
     this._earlyFinish = this._calcEarlyFinish();
+  }
+
+  public getProgressDate() {
+    const out = this.addWorkingDays(
+      this.earlyStart.getTime(),
+      Math.min(this.progressDays, this.durationWorkingDays) - 1 // -1 in order to include earlyStart day
+    );
+    out.setHours(23, 59, 59, 999);
+    return out;
   }
 
   get earlyStart(): Date {
@@ -390,7 +410,7 @@ export class Item implements IItem {
       return this._earlyFinish;
     }
 
-    const res = this.addDays(
+    const res = this.addWorkingDays(
       this.earlyStart.getTime(),
       this._durationWorkingDays - 1
     ); // -1 in order to include earlyStart day

@@ -110,14 +110,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
       throw Error("Invalid argument: v: " + v);
     }
 
-    const progressDate = v.addDays(
-      v.earlyStart.getTime(),
-      Math.min(v.progressDays, v.durationWorkingDays)
-    );
-
-    // dayjs(v.earlyStart)
-    //   .add(Math.min(v.progressDays, v.duration), "days")
-    //   .toDate();
+    const progressDate = v.getProgressDate();
 
     const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
     let barCss = "gantt-bar";

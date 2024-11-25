@@ -1,6 +1,6 @@
 {
   "name": "wc-gantt",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "Gantt chart web component",
   "main": "dist/WcGantt.js",
   "type": "module",
@@ -31,20 +31,20 @@
   "author": "art",
   "license": "MIT",
   "peerDependencies": {
-    "lit": "3.x"
+    "lit": "3.2.1"
   },
   "dependencies": {
     "dayjs": "1.11.13"
   },
   "devDependencies": {
-    "esbuild": "0.23.0",
+    "esbuild": "0.24.0",
     "esbuild-plugin-minify-html-literals": "2.0.1",
     "esbuild-plugin-lit-css": "3.0.1",
-    "eslint": "9.8.0",
-    "eslint-plugin-lit": "1.14.0",
-    "@typescript-eslint/eslint-plugin": "8.0.1",
-    "@typescript-eslint/parser": "8.0.1",
-    "globals": "15.9.0",
-    "typescript": "5.5.4"
+    "eslint": "9.15.0",
+    "eslint-plugin-lit": "1.15.0",
+    "@typescript-eslint/eslint-plugin": "8.15.0",
+    "@typescript-eslint/parser": "8.15.0",
+    "globals": "15.12.0",
+    "typescript": "5.7.2"
   }
 }
