@@ -186,7 +186,7 @@ export class Item implements IItem {
     const date = new Date(d);
     date.setHours(0, 0, 0, 0);
     if (this.isWorkingDay(date)) return date;
-    else this.getNextWorkingDay(date);
+    else return this.getNextWorkingDay(date);
   }
 
   public getNextWorkingDay(d: Date, direction: -1 | 1 = 1) {
@@ -197,35 +197,6 @@ export class Item implements IItem {
       currentDate.setDate(currentDate.getDate() + direction);
     }
     return currentDate;
-
-    // let nextWorkingDay: number = date.toDate().getTime();
-
-    // let isChanged = true;
-
-    // while (isChanged === true) {
-    //   const initialValue = nextWorkingDay;
-
-    //   for (const fd of this.calendar.freeDays) {
-    //     const dMs = nextWorkingDay;
-    //     if (dMs >= fd.start && dMs <= fd.end) {
-    //       nextWorkingDay =
-    //         direction === 1 ? fd.nextWorkingDay : fd.previousWorkingDay;
-    //     }
-    //   }
-
-    //   let isFreeWeekday =
-    //     this.calendar.weekDays[new Date(nextWorkingDay).getDay()] === false;
-
-    //   while (isFreeWeekday == true) {
-    //     const nd = new Date(nextWorkingDay);
-    //     nextWorkingDay = nd.setDate(nd.getDate() + direction);
-    //     isFreeWeekday = this.calendar.weekDays[nd.getDay()] === false;
-    //   }
-
-    //   isChanged = initialValue !== nextWorkingDay;
-    // }
-
-    // return nextWorkingDay;
   }
 
   isWorkingDay(d: Date) {
@@ -247,11 +218,14 @@ export class Item implements IItem {
 
     if (!pred) return this.defaultStartDate;
     const addDays = pred.type === "milestone" ? 0 : 1;
+
+    let out: Date | undefined;
     switch (d.type) {
       case "FS": {
-        return new Date(
+        out = new Date(
           this.addWorkingDays(pred.earlyFinish.getTime(), d.lag + addDays)
         );
+        break;
       }
       case "FF": {
         const diff = d.lag - this.durationWorkingDays;
@@ -261,17 +235,22 @@ export class Item implements IItem {
           diff + addDays
         ).getTime();
 
-        return new Date(
+        out = new Date(
           Math.max(this.defaultStartDate.getTime(), calculatedDate)
         );
+        break;
       }
       case "SS":
-        return this.addWorkingDays(pred.earlyStart.getTime(), d.lag);
+        out = this.addWorkingDays(pred.earlyStart.getTime(), d.lag);
+        break;
       case "SF": {
         const diff = (d.lag + this.durationWorkingDays) * -1;
-        return this.addWorkingDays(pred.earlyStart.getTime(), diff);
+        out = this.addWorkingDays(pred.earlyStart.getTime(), diff);
+        break;
       }
     }
+
+    return out;
   }
 
   public get isStarted() {
