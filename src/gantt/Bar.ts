@@ -74,61 +74,65 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
 
   const scale = this.timeScale;
 
-  const bars = this.schedule.items.map((v, i) => {
-    const id = "bar_" + v.id;
+  const bars = this.schedule.items
+    .filter((x) => !x.hidden)
+    .map((v, i) => {
+      const id = "bar_" + v.id;
 
-    const handler = () => {
-      if (this.suppressClick) return;
+      const handler = () => {
+        if (this.suppressClick) return;
 
-      const ev = new CustomEvent<Item>("item-click", { detail: v });
-      this.dispatchEvent(ev);
-    };
-    const x = scale.dateToPx(v.earlyStart);
+        const ev = new CustomEvent<Item>("item-click", { detail: v });
+        this.dispatchEvent(ev);
+      };
+      const x = scale.dateToPx(v.earlyStart);
 
-    let y = y0 + i * settings.rowHeight;
-    const grHeight = settings.barHeight / 3;
-    if (v.type === "group")
-      y = (settings.rowHeight - grHeight) / 2 + i * settings.rowHeight; //y +=  grHeight / 2;
+      let y = y0 + i * settings.rowHeight;
+      const grHeight = settings.barHeight / 3;
+      if (v.type === "group")
+        y = (settings.rowHeight - grHeight) / 2 + i * settings.rowHeight; //y +=  grHeight / 2;
 
-    const cy = settings.barHeight / 2 + 1; //y + barHeight / 2;
-    if (v.type === "milestone") {
-      const result = renderMilestone.bind(this)(
-        x,
-        y,
-        settings.barHeight,
-        handler,
-        id,
-        v
-      );
+      const cy = settings.barHeight / 2 + 1; //y + barHeight / 2;
+      if (v.type === "milestone") {
+        const result = renderMilestone.bind(this)(
+          x,
+          y,
+          settings.barHeight,
+          handler,
+          id,
+          v
+        );
 
-      return result;
-    }
+        return result;
+      }
 
-    const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
+      const w1 = scale.pxForTimeSpan(v.earlyStart, v.earlyFinish);
 
-    if (isNaN(w1)) {
-      throw Error("Invalid argument: v: " + v);
-    }
+      if (isNaN(w1)) {
+        throw Error("Invalid argument: v: " + v);
+      }
 
-    const progressDate = v.getProgressDate();
+      const progressDate = v.getProgressDate();
 
-    const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
-    let barCss = "gantt-bar";
-    barCss += v.type === "group" ? " group" : "";
+      const w2 = scale.pxForTimeSpan(v.earlyStart, progressDate); // w1 * v.percentCompletion;
+      let barCss = "gantt-bar";
+      barCss += v.type === "group" ? " group" : "";
 
-    const controlRadius = settings.rowHeight / 6; // 6;
-    const controlGap = getControlGap(settings); // 6;
+      const controlRadius = settings.rowHeight / 6; // 6;
+      const controlGap = getControlGap(settings); // 6;
 
-    const controlBorder = 1;
-    const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
+      const controlBorder = 1;
+      const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
 
-    const isDelayed = v.type === "activity" && v.delayDays > 0;
+      const isDelayed = v.type === "activity" && v.delayDays > 0;
 
-    let borderCssClass = v.crit ? "bar-inner-border crit" : "bar-inner-border";
+      let borderCssClass = v.crit
+        ? "bar-inner-border crit"
+        : "bar-inner-border";
 
-    if (isDelayed) borderCssClass += " delayed";
+      if (isDelayed) borderCssClass += " delayed";
 
-    const barBorder = svg`
+      const barBorder = svg`
     <rect
       x=${controlsOffset}
       y="1"
@@ -142,7 +146,7 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     />
     `;
 
-    const backBar = svg`
+      const backBar = svg`
       <rect
         x=${controlsOffset}        
         y="1"
@@ -155,14 +159,14 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
       />
       `;
 
-    let frontBarCss = "front";
-    if (isDelayed) {
-      frontBarCss += " delayed";
-    }
+      let frontBarCss = "front";
+      if (isDelayed) {
+        frontBarCss += " delayed";
+      }
 
-    let frontBar =
-      w2 > 0.000001
-        ? svg`
+      let frontBar =
+        w2 > 0.000001
+          ? svg`
           <rect
             y="1"
             x=${controlsOffset}            
@@ -173,19 +177,19 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
             class=${frontBarCss}
             @click=${handler}
             />`
-        : null;
+          : null;
 
-    if (isDelayed) {
-      const end = Math.min(
-        new Date().setHours(0, 0, 0, 0),
-        v.earlyFinish.getTime()
-      );
+      if (isDelayed) {
+        const end = Math.min(
+          new Date().setHours(0, 0, 0, 0),
+          v.earlyFinish.getTime()
+        );
 
-      const delayW = scale.pxForTimeSpan(v.earlyStart, new Date(end));
+        const delayW = scale.pxForTimeSpan(v.earlyStart, new Date(end));
 
-      const delayBar =
-        w2 > 0.000001
-          ? svg`
+        const delayBar =
+          w2 > 0.000001
+            ? svg`
             <rect
               y="1"
               x=${controlsOffset}            
@@ -196,16 +200,19 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
               class="delay"
               @click=${handler}
               />`
-          : null;
+            : null;
 
-      frontBar = svg`
+        frontBar = svg`
         ${delayBar}${frontBar}
       `;
-    }
-    let controls = svg``;
+      }
+      let controls = svg``;
 
-    if (this.settings.enableChartInteractions === true && v.type === "activity")
-      controls = svg`
+      if (
+        this.settings.enableChartInteractions === true &&
+        v.type === "activity"
+      )
+        controls = svg`
         <circle
           class=${v.type + " ctl-start"}
           data-id=${v.id}           
@@ -258,38 +265,38 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
         </g>
       `;
 
-    // let barDataDate = svg``;
-    // if (
-    //   v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
-    //   v.isStarted
-    // ) {
-    //   const barDataDateX = this.timeScale.dateToPx(v.dataDate);
-    //   const leftY = i * settings.rowHeight;
-    //   const centerY = leftY + settings.rowHeight / 2;
+      // let barDataDate = svg``;
+      // if (
+      //   v.dataDate.getTime() > this.schedule.dataDate.getTime() &&
+      //   v.isStarted
+      // ) {
+      //   const barDataDateX = this.timeScale.dateToPx(v.dataDate);
+      //   const leftY = i * settings.rowHeight;
+      //   const centerY = leftY + settings.rowHeight / 2;
 
-    //   barDataDate = svg`
-    //       <line
-    //         x1=${dataDateX}
-    //         x2=${barDataDateX}
-    //         y1=${leftY}
-    //         y2=${centerY}
-    //         class="data-date-line"
-    //       />
-    //       <line
-    //       x1=${barDataDateX}
-    //       x2=${dataDateX}
-    //       y1=${centerY}
-    //       y2=${leftY}
-    //       class="data-date-line"
-    //     />
-    //     `;
+      //   barDataDate = svg`
+      //       <line
+      //         x1=${dataDateX}
+      //         x2=${barDataDateX}
+      //         y1=${leftY}
+      //         y2=${centerY}
+      //         class="data-date-line"
+      //       />
+      //       <line
+      //       x1=${barDataDateX}
+      //       x2=${dataDateX}
+      //       y1=${centerY}
+      //       y2=${leftY}
+      //       class="data-date-line"
+      //     />
+      //     `;
 
-    //   //dataDateX
-    // }
+      //   //dataDateX
+      // }
 
-    return {
-      id,
-      tpl: svg` 
+      return {
+        id,
+        tpl: svg` 
      
       <svg 
         x=${x - controlsOffset} 
@@ -313,8 +320,8 @@ export function Bar(this: WcGantt, settings: CompiledSettings) {
     
       </svg>
     `,
-    };
-  });
+      };
+    });
 
   return svg`
     <g>      

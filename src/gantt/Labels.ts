@@ -10,10 +10,12 @@ export function Labels(this: WcGantt) {
   };
   const items: { id: string; tpl: TemplateResult<2> }[] = [];
   let i = 0;
-  this.schedule.items.forEach((v) => {
-    items.push({
-      id: "lbl_" + i,
-      tpl: svg`
+  this.schedule.items
+    .filter((x) => !x.hidden)
+    .forEach((v) => {
+      items.push({
+        id: "lbl_" + i,
+        tpl: svg`
       <text
         key=${i}
         x="10"
@@ -23,9 +25,9 @@ export function Labels(this: WcGantt) {
       >
         ${v.name}
       </text>`,
+      });
+      i++;
     });
-    i++;
-  });
 
   return svg`
     <g id="labels">

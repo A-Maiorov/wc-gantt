@@ -69,48 +69,50 @@ export function BarBaseline(this: WcGantt, settings: CompiledSettings) {
 
   const scale = this.timeScale;
 
-  const bars = this.schedule.items.map((v, i) => {
-    const id = "bar_" + v.id + "_baseline";
+  const bars = this.schedule.items
+    .filter((x) => !x.hidden)
+    .map((v, i) => {
+      const id = "bar_" + v.id + "_baseline";
 
-    const x = scale.dateToPx(v.earlyStart);
+      const x = scale.dateToPx(v.earlyStart);
 
-    let y = y0 + i * settings.rowHeight;
-    const grHeight = settings.barHeight / 3;
-    if (v.type === "group")
-      y = (settings.rowHeight - grHeight) / 2 + i * settings.rowHeight; //y +=  grHeight / 2;
+      let y = y0 + i * settings.rowHeight;
+      const grHeight = settings.barHeight / 3;
+      if (v.type === "group")
+        y = (settings.rowHeight - grHeight) / 2 + i * settings.rowHeight; //y +=  grHeight / 2;
 
-    if (v.type === "milestone") {
-      const result = renderMilestone.bind(this)(
-        x,
-        y,
-        settings.barHeight,
-        () => {},
-        id,
-        v
-      );
+      if (v.type === "milestone") {
+        const result = renderMilestone.bind(this)(
+          x,
+          y,
+          settings.barHeight,
+          () => {},
+          id,
+          v
+        );
 
-      return result;
-    }
+        return result;
+      }
 
-    let barCss = "gantt-bar";
-    barCss += v.type === "group" ? " group" : "";
+      let barCss = "gantt-bar";
+      barCss += v.type === "group" ? " group" : "";
 
-    const controlRadius = settings.rowHeight / 6; // 6;
-    const controlGap = getControlGap(settings); // 6;
+      const controlRadius = settings.rowHeight / 6; // 6;
+      const controlGap = getControlGap(settings); // 6;
 
-    const controlBorder = 1;
-    const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
+      const controlBorder = 1;
+      const controlsOffset = controlRadius * 2 + controlGap + controlBorder * 2;
 
-    let barBaseline = svg``;
-    if (this.baselineSchedule) {
-      const bl = this.baselineSchedule.itemsIndex.get(v.id);
-      if (bl) {
-        const progressDate = dayjs(bl.earlyStart)
-          .add(bl.progressDays, "days")
-          .toDate();
-        const progressW = scale.pxForTimeSpan(bl.earlyStart, progressDate);
+      let barBaseline = svg``;
+      if (this.baselineSchedule) {
+        const bl = this.baselineSchedule.itemsIndex.get(v.id);
+        if (bl) {
+          const progressDate = dayjs(bl.earlyStart)
+            .add(bl.progressDays, "days")
+            .toDate();
+          const progressW = scale.pxForTimeSpan(bl.earlyStart, progressDate);
 
-        barBaseline = svg`
+          barBaseline = svg`
           <svg 
           x=${scale.dateToPx(bl.earlyStart) - controlsOffset} 
           y=${y - 1}              
@@ -142,16 +144,16 @@ export function BarBaseline(this: WcGantt, settings: CompiledSettings) {
               />
           </svg>
         `;
+        }
       }
-    }
 
-    return {
-      id,
-      tpl: svg` 
+      return {
+        id,
+        tpl: svg` 
         ${barBaseline}
       `,
-    };
-  });
+      };
+    });
 
   return svg`
     <g>      

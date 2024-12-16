@@ -78,12 +78,14 @@ export function Grid(this: WcGantt, settings: CompiledSettings) {
 
   const items: { id: number; tpl: TemplateResult }[] = [];
 
-  for (let i = 0; i < this.schedule.items.length; i++) {
+  const filteredItems = this.schedule.items.filter((x) => !x.hidden);
+
+  for (let i = 0; i < filteredItems.length; i++) {
     const y1 = (i + 1) * settings.rowHeight + settings.lineWidth;
     const y0 = i * settings.rowHeight + settings.lineWidth;
 
     let background = svg``;
-    const v = Array.from(this.schedule.items.values())[i];
+    const v = filteredItems[i];
     if (v.type === "group")
       background = svg`
       <rect

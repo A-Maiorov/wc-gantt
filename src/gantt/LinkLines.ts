@@ -8,6 +8,10 @@ import type { IDependency, Item } from "../schedule";
 export function LinkLines(this: WcGantt) {
   const itemsIdsMap: Map<string, Item> = this.schedule.itemsIndex;
 
+  const hiddenItems = new Set<string>(
+    this.schedule.items.filter((x) => x.hidden == true).map((x) => x.id)
+  );
+
   return svg`
     <g class="link-lines" >
       ${this.schedule.dependencies
@@ -22,6 +26,10 @@ export function LinkLines(this: WcGantt) {
           );
           return aa - bb;
         })
+        .filter(
+          (x) =>
+            !hiddenItems.has(x.predecessor) && !hiddenItems.has(x.successor)
+        )
         .map((s) => {
           return renderLink.bind(this)(
             s,
@@ -49,8 +57,12 @@ function renderLink(
 
   const y0 = this.settings.rowHeight / 2;
 
-  const i = this.schedule.items.findIndex((x) => x.id === sourceItem.id);
-  const j = this.schedule.items.findIndex((x) => x.id === targetItem.id);
+  const i = this.schedule.items
+    .filter((x) => !x.hidden)
+    .findIndex((x) => x.id === sourceItem.id);
+  const j = this.schedule.items
+    .filter((x) => !x.hidden)
+    .findIndex((x) => x.id === targetItem.id);
 
   const gap = 12;
   const arrow = 3;

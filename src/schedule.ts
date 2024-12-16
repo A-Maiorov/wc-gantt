@@ -32,6 +32,7 @@ export interface IItem {
   nested?: IItem[];
   color?: string;
   calendar?: ICalendar;
+  hidden?: boolean;
 }
 
 export class Item implements IItem {
@@ -47,6 +48,7 @@ export class Item implements IItem {
     return this.type === "group" ? Number.MAX_VALUE : this._execOrder;
   }
 
+  public hidden?: boolean;
   public color?: string;
   public nested: Item[] = [];
   public id: string = crypto.randomUUID();
@@ -485,6 +487,7 @@ export class Schedule {
     for (const item of items) {
       const i = new Item(this);
 
+      i.hidden = item.hidden;
       i.id = item.id;
       i.name = item.name;
       flatArray.push(i);
