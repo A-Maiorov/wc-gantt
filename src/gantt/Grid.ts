@@ -119,8 +119,7 @@ export function Grid(this: WcGantt, settings: CompiledSettings) {
   ${weekend}
   <g id="grid">
   
-    <line
-        QQ
+    <line        
         x1=${0}
         x2=${settings.width}
         y1=${settings.lineWidth}

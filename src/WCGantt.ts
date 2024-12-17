@@ -198,7 +198,9 @@ export class WcGantt extends LitElement {
   }
 
   private calculateDimensions() {
-    const height = this.schedule.items.length * this.settings.rowHeight;
+    const height =
+      this.schedule.items.filter((x) => !x.hidden).length *
+      this.settings.rowHeight;
 
     const r = (this.getLabelsElement() as HTMLElement)?.getBoundingClientRect();
 
