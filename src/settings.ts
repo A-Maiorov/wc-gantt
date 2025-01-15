@@ -8,6 +8,7 @@ export type TimeScaleMode =
 export class WcGanttSettings {
   disableSF = false;
   timeScaleMode: TimeScaleMode = "week";
+  sortActivities: "default" | "start" | "finish";
   showDependencies: boolean = true;
   showLabels: boolean = true;
 

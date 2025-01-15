@@ -4,12 +4,13 @@ import { p2s } from "../utils";
 import { createRoundedPathString } from "../roundedCorners";
 import type { WcGantt } from "../WcGantt";
 import type { IDependency, Item } from "../schedule";
+import { getSortedItems } from "./sortItems";
 
 export function LinkLines(this: WcGantt) {
   const itemsIdsMap: Map<string, Item> = this.schedule.itemsIndex;
-
+  const _items = getSortedItems(this.settings, this.schedule);
   const hiddenItems = new Set<string>(
-    this.schedule.items.filter((x) => x.hidden == true).map((x) => x.id)
+    _items.filter((x) => x.hidden == true).map((x) => x.id)
   );
 
   return svg`
@@ -33,6 +34,7 @@ export function LinkLines(this: WcGantt) {
         .map((s) => {
           return renderLink.bind(this)(
             s,
+            _items,
             itemsIdsMap.get(s.predecessor.toString()),
             itemsIdsMap.get(s.successor.toString())
           );
@@ -43,6 +45,7 @@ export function LinkLines(this: WcGantt) {
 function renderLink(
   this: WcGantt,
   l: IDependency,
+  sortedItems: Item[],
   source?: Item,
   target?: Item
 ) {
@@ -57,10 +60,10 @@ function renderLink(
 
   const y0 = this.settings.rowHeight / 2;
 
-  const i = this.schedule.items
+  const i = sortedItems
     .filter((x) => !x.hidden)
     .findIndex((x) => x.id === sourceItem.id);
-  const j = this.schedule.items
+  const j = sortedItems
     .filter((x) => !x.hidden)
     .findIndex((x) => x.id === targetItem.id);
 

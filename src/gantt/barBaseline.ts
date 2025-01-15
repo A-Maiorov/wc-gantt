@@ -6,6 +6,7 @@ import type { CompiledSettings } from "../settings";
 import type { Item } from "../schedule";
 import { getControlGap } from "./Bar";
 import dayjs from "dayjs";
+import { getSortedItems } from "./sortItems";
 
 function renderMilestone(
   this: WcGantt,
@@ -69,7 +70,9 @@ export function BarBaseline(this: WcGantt, settings: CompiledSettings) {
 
   const scale = this.timeScale;
 
-  const bars = this.schedule.items
+  const items = getSortedItems(this.settings, this.schedule);
+
+  const bars = items
     .filter((x) => !x.hidden)
     .map((v, i) => {
       const id = "bar_" + v.id + "_baseline";
