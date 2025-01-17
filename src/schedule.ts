@@ -292,21 +292,33 @@ export class Item implements IItem {
 
     const expectedProgressDate = Math.min(today, this.earlyFinish.getTime());
 
-    //how many days between today and finish?
-    //how many days excluding free days?
+    const actualProgressDate = this.getProgressDate();
 
-    const expectedProgressDays = this.getWorkingDaysBetweenDates(
-      this.earlyStart,
-      new Date(expectedProgressDate)
-    ).length;
+    const diff = dayjs(expectedProgressDate).diff(actualProgressDate, "days");
+    if (diff > 0) {
+      const delayWorkingDays = this.getWorkingDaysBetweenDates(
+        actualProgressDate,
+        new Date(expectedProgressDate)
+      ).length;
+
+      return delayWorkingDays;
+    }
+
+    // const expectedProgressDays = this.getWorkingDaysBetweenDates(
+    //   this.earlyStart,
+    //   new Date(expectedProgressDate)
+    // ).length;
+
+    //=======
     //  dayjs(expectedProgressDate).diff(
     //   this.earlyStart,
     //   "days"
     // );
+    //======
 
-    if (this.progressDays < expectedProgressDays) {
-      return expectedProgressDays - this.progressDays;
-    }
+    // if (this.progressDays < expectedProgressDays) {
+    //   return expectedProgressDays - this.progressDays;
+    // }
     return 0;
   }
   private getWorkingDaysBetweenDates(start: Date, end: Date) {
