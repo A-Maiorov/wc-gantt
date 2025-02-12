@@ -7,6 +7,13 @@ export function getSortedItems(s: WcGanttSettings, schedule: Schedule) {
       return schedule.items;
     case "finish":
       return [...schedule.items].sort((a, b) => {
+        if (
+          a.type == "group" ||
+          b.type == "group" ||
+          a.groupPath !== b.groupPath
+        ) {
+          return 0;
+        }
         const diff = a.earlyFinish.getTime() - b.earlyFinish.getTime();
         if (diff === 0) {
           return sortByIndex(a, b, schedule);
@@ -15,6 +22,14 @@ export function getSortedItems(s: WcGanttSettings, schedule: Schedule) {
       });
     case "start":
       return [...schedule.items].sort((a, b) => {
+        if (
+          a.type == "group" ||
+          b.type == "group" ||
+          a.groupPath !== b.groupPath
+        ) {
+          return 0;
+        }
+
         const diff = a.earlyStart.getTime() - b.earlyStart.getTime();
         if (diff === 0) {
           return sortByIndex(a, b, schedule);

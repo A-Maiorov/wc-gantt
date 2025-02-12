@@ -90,6 +90,7 @@ export class TimeScale {
 
   pxForTimeSpan(start: Date, end: Date) {
     let span = end.getTime() - start.getTime();
+    if (span === 0) return 0;
     return this.msToPx(span);
   }
 }

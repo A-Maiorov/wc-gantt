@@ -54,6 +54,8 @@ export class Item implements IItem {
   public id: string = crypto.randomUUID();
   public name: string = this.id;
 
+  public groupPath: string;
+
   public _calendar: ICalendar = {
     name: "default",
     id: "default",
@@ -250,6 +252,11 @@ export class Item implements IItem {
         out = this.addWorkingDays(pred.earlyStart.getTime(), diff);
         break;
       }
+    }
+
+    if (out == undefined) {
+      console.log("failed to find start date based on dependency: ", d);
+      return this.defaultStartDate;
     }
 
     return out;
@@ -493,7 +500,7 @@ export class Schedule {
     return Math.max(...orders);
   }
 
-  private _flattenItems(items: IItem[]): Item[] {
+  private _flattenItems(items: IItem[], groupPath: string = ""): Item[] {
     const flatArray: Item[] = [];
 
     for (const item of items) {
@@ -502,6 +509,8 @@ export class Schedule {
       i.hidden = item.hidden;
       i.id = item.id;
       i.name = item.name;
+      i.groupPath = groupPath;
+
       flatArray.push(i);
 
       if (
@@ -513,7 +522,10 @@ export class Schedule {
         i.nested = [];
         i.type = "group";
         i.color = item.color;
-        i.nested = this._flattenItems(item.nested ?? []);
+        i.nested = this._flattenItems(
+          item.nested ?? [],
+          groupPath + "/" + i.id
+        );
         flatArray.push(...i.nested);
       } else {
         if (item.calendar) i.calendar = item.calendar;
